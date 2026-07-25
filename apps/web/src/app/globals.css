@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  body {
+    @apply bg-base text-ink900text font-body antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+  /* Visible keyboard focus everywhere — accessibility floor, not optional. */
+  :focus-visible {
+    outline: 2px solid theme('colors.marigold.DEFAULT');
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .price-tag {
+    @apply font-mono tabular-nums;
+  }
+
+  /* Signature element: a diagonal corner ribbon for flash-sale/discount
+     badges — a small piece of "bazaar signage" energy on every deal card
+     without resorting to a generic rounded-pill badge. */
+  .corner-ribbon {
+    @apply absolute -left-1 -top-1 z-10;
+  }
+  .corner-ribbon span {
+    @apply block bg-chili px-3 py-1 text-xs font-bold text-white shadow-card;
+    clip-path: polygon(0 0, 100% 0, 88% 100%, 0% 100%);
+  }
+}

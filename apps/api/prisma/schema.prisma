@@ -1,0 +1,509 @@
+// ============================================================================
+// Marketplace — Prisma Schema
+// ----------------------------------------------------------------------------
+// This is the CORE schema for the launch-scope MVP: identity, vendors/stores,
+// catalog, cart, orders and reviews. It is intentionally normalized (3NF)
+// with explicit join tables, soft-delete flags where records must be
+// auditable, and indexes on every foreign key and every column used for
+// filtering/sorting on the storefront.
+//
+// Deliberately deferred to later phases (documented in ARCHITECTURE.md so
+// they aren't forgotten): payments/transactions ledger, coupons redemption
+// ledger, shipping/courier tables, admin audit log, support tickets,
+// fraud-detection signals, CMS pages, notifications. Adding them later is
+// additive (new tables + FKs) and won't require reshaping what's here.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+enum Role {
+  CUSTOMER
+  VENDOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_APPROVAL
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  UNPAID
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum AddressType {
+  HOME
+  OFFICE
+  OTHER
+}
+
+enum CouponDiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+// ----------------------------------------------------------------------------
+// Identity
+// ----------------------------------------------------------------------------
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  emailVerifiedAt   DateTime?
+  phone             String?   @unique
+  phoneVerifiedAt   DateTime?
+  passwordHash      String? // null for OAuth-only accounts
+  firstName         String
+  lastName          String
+  avatarUrl         String?
+  role              Role      @default(CUSTOMER)
+  isActive          Boolean   @default(true)
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String? // encrypted at rest by application layer
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime? // soft delete for audit/legal retention
+
+  oauthAccounts   OAuthAccount[]
+  refreshTokens   RefreshToken[]
+  addresses       Address[]
+  vendor          Vendor?
+  cart            Cart?
+  orders          Order[]
+  reviews         Review[]
+  wishlistItems   WishlistItem[]
+  recentlyViewed  RecentlyViewed[]
+  couponRedemptions CouponRedemption[]
+
+  @@index([role])
+  @@index([createdAt])
+  @@map("users")
+}
+
+enum OAuthProvider {
+  GOOGLE
+  FACEBOOK
+}
+
+model OAuthAccount {
+  id             String        @id @default(uuid())
+  provider       OAuthProvider
+  providerUserId String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  createdAt      DateTime      @default(now())
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+// Refresh tokens are stored hashed, one row per issued token, so any single
+// token can be revoked (rotation) without invalidating a user's whole session set.
+model RefreshToken {
+  id          String    @id @default(uuid())
+  tokenHash   String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  userAgent   String?
+  ipAddress   String?
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  replacedBy  String?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model Address {
+  id           String      @id @default(uuid())
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  label        String // e.g. "Home", "Office"
+  type         AddressType @default(HOME)
+  recipientName String
+  phone        String
+  line1        String
+  line2        String?
+  city         String
+  state        String?
+  postalCode   String?
+  country      String      @default("PK")
+  isDefault    Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  orders Order[]
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ----------------------------------------------------------------------------
+// Vendors & Stores
+// ----------------------------------------------------------------------------
+
+model Vendor {
+  id                String       @id @default(uuid())
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String       @unique
+  businessName      String
+  businessRegNumber String?
+  taxId             String?
+  status            VendorStatus @default(PENDING)
+  commissionRateBps Int          @default(1000) // basis points, e.g. 1000 = 10%
+  approvedAt        DateTime?
+  rejectedReason    String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  store    Store?
+  products Product[]
+  coupons  Coupon[]
+  orders   Order[]
+
+  @@index([status])
+  @@map("vendors")
+}
+
+model Store {
+  id          String   @id @default(uuid())
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  vendorId    String   @unique
+  name        String
+  slug        String   @unique
+  description String?
+  logoUrl     String?
+  bannerUrl   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@map("stores")
+}
+
+// ----------------------------------------------------------------------------
+// Catalog
+// ----------------------------------------------------------------------------
+
+model Category {
+  id       String     @id @default(uuid())
+  name     String
+  slug     String     @unique
+  imageUrl String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  parentId String?
+  children Category[] @relation("CategoryTree")
+  isActive Boolean    @default(true)
+  sortOrder Int       @default(0)
+
+  products Product[]
+
+  @@index([parentId])
+  @@index([slug])
+  @@map("categories")
+}
+
+model Product {
+  id              String        @id @default(uuid())
+  vendor          Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  vendorId        String
+  category        Category      @relation(fields: [categoryId], references: [id])
+  categoryId      String
+  title           String
+  slug            String        @unique
+  description     String
+  brand           String?
+  status          ProductStatus @default(DRAFT)
+  rejectedReason  String?
+  basePriceCents  Int // price stored as integer minor units to avoid float rounding
+  currency        String        @default("PKR")
+  discountPct     Int           @default(0) // 0-100, applied storefront-side for flash sales
+  averageRating   Decimal       @default(0) @db.Decimal(3, 2)
+  reviewCount     Int           @default(0)
+  totalSold       Int           @default(0)
+  isFeatured      Boolean       @default(false)
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  images        ProductImage[]
+  variants      ProductVariant[]
+  reviews       Review[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  wishlistItems WishlistItem[]
+  recentlyViewed RecentlyViewed[]
+
+  @@index([vendorId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([slug])
+  @@index([isFeatured])
+  @@index([createdAt])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  url       String
+  altText   String?
+  sortOrder Int     @default(0)
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+// A variant is a purchasable SKU (e.g. "Red / Large"). Every product has at
+// least one default variant, even if it has no real options, so cart/order
+// lines always reference a variant rather than branching product-vs-variant
+// logic through the rest of the system.
+model ProductVariant {
+  id            String  @id @default(uuid())
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId     String
+  sku           String  @unique
+  optionsJson   Json // e.g. {"color": "Red", "size": "L"}
+  priceCents    Int
+  stockQuantity Int     @default(0)
+  lowStockAlertAt Int   @default(5)
+  weightGrams   Int?
+  isActive      Boolean @default(true)
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+// ----------------------------------------------------------------------------
+// Cart
+// ----------------------------------------------------------------------------
+
+model Cart {
+  id        String     @id @default(uuid())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String     @unique
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+  createdAt DateTime   @default(now())
+
+  @@map("carts")
+}
+
+model CartItem {
+  id         String         @id @default(uuid())
+  cart       Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId     String
+  product    Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  variant    ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantId  String
+  quantity   Int            @default(1)
+  addedAt    DateTime       @default(now())
+
+  @@unique([cartId, variantId])
+  @@index([cartId])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+// ----------------------------------------------------------------------------
+// Orders
+// ----------------------------------------------------------------------------
+
+// One customer checkout can fan out into several vendor-scoped Orders (each
+// vendor ships/manages their own order independently), grouped by orderGroupId.
+model Order {
+  id             String        @id @default(uuid())
+  orderGroupId   String // shared across sibling orders from one checkout
+  orderNumber    String        @unique
+  user           User          @relation(fields: [userId], references: [id])
+  userId         String
+  vendor         Vendor        @relation(fields: [vendorId], references: [id])
+  vendorId       String
+  shippingAddress Address      @relation(fields: [addressId], references: [id])
+  addressId      String
+  status         OrderStatus   @default(PENDING)
+  paymentStatus  PaymentStatus @default(UNPAID)
+  paymentMethod  String // "COD" | "STRIPE" | "JAZZCASH" | "EASYPAISA" | ...
+  subtotalCents  Int
+  shippingCents  Int           @default(0)
+  discountCents  Int           @default(0)
+  taxCents       Int           @default(0)
+  totalCents     Int
+  currency       String        @default("PKR")
+  couponCode     String?
+  placedAt       DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([vendorId])
+  @@index([orderGroupId])
+  @@index([status])
+  @@index([placedAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String         @id @default(uuid())
+  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  product     Product        @relation(fields: [productId], references: [id])
+  productId   String
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+  variantId   String
+  titleSnapshot String // denormalized: preserves what the customer bought even if the product is later edited
+  optionsSnapshot Json
+  unitPriceCents Int
+  quantity    Int
+  lineTotalCents Int
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ----------------------------------------------------------------------------
+// Reviews, Wishlist, Personalization
+// ----------------------------------------------------------------------------
+
+model Review {
+  id         String   @id @default(uuid())
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  rating     Int // 1-5
+  title      String?
+  body       String?
+  isVerifiedPurchase Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([productId, userId])
+  @@index([productId])
+  @@map("reviews")
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("wishlist_items")
+}
+
+model RecentlyViewed {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  viewedAt  DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId, viewedAt])
+  @@map("recently_viewed")
+}
+
+// ----------------------------------------------------------------------------
+// Coupons
+// ----------------------------------------------------------------------------
+
+// A coupon with vendorId = null is platform-wide (usable against any
+// vendor's order); a coupon scoped to a vendor only discounts that vendor's
+// share of a checkout. Redemptions are tracked in a separate table rather
+// than just incrementing a counter, so "has this user already used this
+// coupon" and per-coupon usage reporting are both answerable later without
+// a schema change.
+model Coupon {
+  id               String             @id @default(uuid())
+  code             String             @unique
+  description      String?
+  discountType     CouponDiscountType
+  discountValue    Int // percentage points (0-100) or fixed minor-unit amount, per discountType
+  minOrderCents    Int                @default(0)
+  maxRedemptions   Int? // null = unlimited
+  vendor           Vendor?            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  vendorId         String?
+  startsAt         DateTime?
+  expiresAt        DateTime?
+  isActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  redemptions CouponRedemption[]
+
+  @@index([vendorId])
+  @@index([isActive])
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id           String   @id @default(uuid())
+  coupon       Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  couponId     String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  orderGroupId String
+  discountCents Int
+  redeemedAt   DateTime @default(now())
+
+  @@index([couponId])
+  @@index([userId])
+  @@map("coupon_redemptions")
+}
+
