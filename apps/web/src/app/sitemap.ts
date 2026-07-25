@@ -3,7 +3,7 @@ import { api } from '@/lib/api';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
-export default async function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [categories, { items: products }] = await Promise.all([
     api.categories.list().catch(() => []),
     api.products.list({ pageSize: 100 }).catch(() => ({ items: [] })),
