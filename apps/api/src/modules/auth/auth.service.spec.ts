@@ -18,7 +18,7 @@ describe('AuthService', () => {
       findById: jest.fn(),
       create: jest.fn(),
       touchLastLogin: jest.fn(),
-      toSafeUser: jest.fn((u) => u),
+      toSafeUser: jest.fn((u) => u) as any,
     };
 
     prisma = {
