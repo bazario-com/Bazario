@@ -22,7 +22,6 @@ RUN npm run build
 
 # ---- production: minimal runtime image ---------------------------------------
 FROM node:20-alpine AS production
-RUN apk add --no-cache openssl1.1-compat
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package*.json ./
