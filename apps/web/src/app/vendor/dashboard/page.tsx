@@ -62,7 +62,7 @@ export default function VendorDashboardPage() {
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
         <h1 className="mb-2 text-xl font-bold">You're not registered as a vendor yet</h1>
         <Link href="/vendor/register" className="rounded-card bg-marigold px-6 py-3 font-semibold text-ink">
-          Apply to sell on Bazaario
+          Apply to sell on Shopina
         </Link>
       </div>
     );

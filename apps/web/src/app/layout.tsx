@@ -17,13 +17,13 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Bazaario — Shop everything, from every corner of Pakistan',
-    template: '%s | Bazaario',
+    default: 'Shopina — Shop everything, from every corner of Pakistan',
+    template: '%s | Shopina',
   },
   description:
     'A multi-vendor marketplace for electronics, fashion, home goods and more — with flash sales, verified vendors and nationwide delivery.',
   openGraph: {
-    title: 'Bazaario',
+    title: 'Shopina',
     description: 'Shop everything, from every corner of Pakistan.',
     type: 'website',
   },

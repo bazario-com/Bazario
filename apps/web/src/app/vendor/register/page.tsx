@@ -62,7 +62,7 @@ export default function VendorRegisterPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
-      <h1 className="mb-1 text-2xl font-bold">Sell on Bazaario</h1>
+      <h1 className="mb-1 text-2xl font-bold">Sell on Shopina</h1>
       <p className="mb-6 text-sm text-muted">
         Tell us about your business. An admin will review your application before your store goes live.
       </p>

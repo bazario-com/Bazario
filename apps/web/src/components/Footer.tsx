@@ -11,7 +11,7 @@ const columns = [
     ],
   },
   {
-    title: 'Sell on Bazaario',
+    title: 'Sell on Shopina',
     links: [
       { label: 'Become a Vendor', href: '/vendor/register' },
       { label: 'Vendor Help', href: '/vendor/help' },
@@ -29,7 +29,7 @@ const columns = [
   {
     title: 'Company',
     links: [
-      { label: 'About Bazaario', href: '/about' },
+      { label: 'About Shopina', href: '/about' },
       { label: 'Careers', href: '/careers' },
       { label: 'Privacy Policy', href: '/legal/privacy' },
       { label: 'Terms of Service', href: '/legal/terms' },
@@ -57,7 +57,7 @@ export function Footer() {
         ))}
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/50">
-        © {new Date().getFullYear()} Bazaario. All rights reserved.
+        © {new Date().getFullYear()} Shopina. All rights reserved.
       </div>
     </footer>
   );

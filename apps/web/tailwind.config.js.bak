@@ -6,13 +6,13 @@ module.exports = {
       colors: {
         // Deep indigo-navy: chrome, nav, headers — the "closed shop" tone.
         ink: {
-          DEFAULT: '#1B4332',
-          50: '#EAF4EF',
-          100: '#CDE3D4',
-          400: '#40725A',
-          600: '#1B4332',
-          700: '#14342A',
-          900: '#0D2318',
+          DEFAULT: '#142B4D',
+          50: '#EEF2F8',
+          100: '#D6E0EE',
+          400: '#3E5578',
+          600: '#142B4D',
+          700: '#0F2039',
+          900: '#0A1526',
         },
         // Marigold: primary CTA, price emphasis, active states.
         marigold: {

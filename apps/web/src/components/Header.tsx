@@ -27,7 +27,7 @@ export function Header({ categories }: { categories: Category[] }) {
           <span>Deliver to Pakistan — Cash on Delivery available nationwide</span>
           <div className="flex gap-4">
             <Link href="/vendor/register" className="hover:text-white">
-              Sell on Bazaario
+              Sell on Shopina 🇵🇰
             </Link>
             <Link href="/help" className="hover:text-white">
               Help Center
@@ -39,7 +39,7 @@ export function Header({ categories }: { categories: Category[] }) {
       {/* Main bar */}
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
         <Link href="/" className="font-display text-2xl font-extrabold text-white shrink-0">
-          Bazaario
+          Shopina 🇵🇰
         </Link>
 
         <button

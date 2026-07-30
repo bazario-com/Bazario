@@ -31,7 +31,7 @@ export default function RegisterPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
-      <h1 className="mb-6 text-2xl font-bold">Create your Bazaario account</h1>
+      <h1 className="mb-6 text-2xl font-bold">Create your Shopina account</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">

@@ -122,7 +122,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
           <div className="rounded-card border border-line p-4 text-sm text-muted">
             <p>✓ Cash on Delivery available</p>
-            <p>✓ Sold by {product.vendor.store?.name ?? 'Bazaario Marketplace'}</p>
+            <p>✓ Sold by {product.vendor.store?.name ?? 'Shopina Marketplace'}</p>
             <p>✓ 7-day return policy</p>
           </div>
 

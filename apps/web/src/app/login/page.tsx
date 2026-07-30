@@ -29,7 +29,7 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
-      <h1 className="mb-6 text-2xl font-bold">Log in to Bazaario</h1>
+      <h1 className="mb-6 text-2xl font-bold">Log in to Shopina</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -71,7 +71,7 @@ export default function LoginPage() {
       </form>
 
       <p className="mt-6 text-center text-sm text-muted">
-        New to Bazaario?{' '}
+        New to Shopina?{' '}
         <Link href="/register" className="font-medium text-ink hover:text-marigold-600">
           Create an account
         </Link>
