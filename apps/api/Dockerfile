@@ -35,4 +35,4 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 EXPOSE 4000
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "node prisma/seed/compiled/seed.js && node dist/main"]
