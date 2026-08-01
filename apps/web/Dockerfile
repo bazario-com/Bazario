@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:20-alpine AS base
+FROM node:25-alpine AS base
 WORKDIR /app
 COPY package*.json ./
 
@@ -18,7 +18,7 @@ COPY . .
 RUN npm run build
 
 # ---- production -------------------------------------------------------------------
-FROM node:20-alpine AS production
+FROM node:25-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/public ./public
