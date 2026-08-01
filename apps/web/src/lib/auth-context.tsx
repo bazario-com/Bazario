@@ -75,7 +75,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const body = await res.json().catch(() => ({}));
       throw new Error(body.message ?? 'Login failed');
     }
-    applyAuthResult(await res.json());
+    const data = await res.json();
+    applyAuthResult(data);
+    return data;
   };
 
   const register = async (data: {
@@ -94,7 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const body = await res.json().catch(() => ({}));
       throw new Error(body.message ?? 'Registration failed');
     }
-    applyAuthResult(await res.json());
+    const data = await res.json();
+    applyAuthResult(data);
+    return data;
   };
 
   const logout = async () => {

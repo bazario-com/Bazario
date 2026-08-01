@@ -18,8 +18,9 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
-      router.push('/');
+      const result = await login(email, password);
+      const role = result.user.role;
+      router.push(role === 'ADMIN' || role === 'SUPER_ADMIN' ? '/admin' : '/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
