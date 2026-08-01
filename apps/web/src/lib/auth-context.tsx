@@ -96,9 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const body = await res.json().catch(() => ({}));
       throw new Error(body.message ?? 'Registration failed');
     }
-    const data = await res.json();
-    applyAuthResult(data);
-    return data;
+    applyAuthResult(await res.json());
   };
 
   const logout = async () => {
