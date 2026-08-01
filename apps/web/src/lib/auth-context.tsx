@@ -16,7 +16,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   accessToken: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ accessToken: string; user: AuthUser }>;
   register: (data: {
     email: string;
     password: string;
