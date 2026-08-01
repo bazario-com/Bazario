@@ -80,6 +80,10 @@ export default function AdminDashboardPage() {
           <p className="font-semibold">🗂️ Categories</p>
           <p className="text-sm text-muted">Manage the storefront category tree</p>
         </Link>
+          <Link href="/admin/announcements" className="rounded-card bg-surface p-5 shadow-card hover:shadow-cardHover">
+            <p className="font-semibold">📣 Announcements</p>
+            <p className="text-sm text-muted">Post site-wide banners and promos</p>
+          </Link>
       </div>
     </div>
   );

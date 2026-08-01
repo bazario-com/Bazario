@@ -508,3 +508,13 @@ model CouponRedemption {
   @@map("coupon_redemptions")
 }
 
+
+model Announcement {
+  id        String    @id @default(cuid())
+  message   String
+  type      String    @default("INFO")
+  isActive  Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+}

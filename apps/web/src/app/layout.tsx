@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import { CartProvider } from '@/lib/cart-context';
 import { Header } from '@/components/Header';
+import { AnnouncementBar } from '@/components/AnnouncementBar';
 import { Footer } from '@/components/Footer';
 import { api } from '@/lib/api';
 
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <AuthProvider>
           <CartProvider>
+            <AnnouncementBar />
             <Header categories={categories} />
             <main>{children}</main>
             <Footer />
