@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict iM007Czzk3DXdWTHCZd0m4lTn8BRyaSPH9xARY6c1jaQFvf1chNMHaHrP9lYqEK
 
 -- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2
@@ -1532,5 +1531,4 @@ ALTER TABLE ONLY public.wishlist_items
 -- PostgreSQL database dump complete
 --
 
-\unrestrict iM007Czzk3DXdWTHCZd0m4lTn8BRyaSPH9xARY6c1jaQFvf1chNMHaHrP9lYqEK
 
