@@ -84,6 +84,10 @@ export default function AdminDashboardPage() {
             <p className="font-semibold">📣 Announcements</p>
             <p className="text-sm text-muted">Post site-wide banners and promos</p>
           </Link>
+          <Link href="/admin/messages" className="rounded-card bg-surface p-5 shadow-card hover:shadow-cardHover">
+            <p className="font-semibold">💬 Messages</p>
+            <p className="text-sm text-muted">Vendor & customer conversations</p>
+          </Link>
       </div>
     </div>
   );

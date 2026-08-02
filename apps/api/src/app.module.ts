@@ -16,6 +16,8 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { CouponsModule } from './modules/coupons/coupons.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { MessagingModule } from './modules/messaging/messaging.module';
+import { ShipmentsModule } from './modules/shipments/shipments.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -46,6 +48,8 @@ import appConfig from './config/app.config';
     CouponsModule,
     OrdersModule,
     AdminModule,
+    MessagingModule,
+    ShipmentsModule,
   ],
   providers: [
     // Without this, @Throttle() on individual routes (e.g. auth login/register)

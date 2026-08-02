@@ -113,6 +113,10 @@ function OrdersContent() {
                 </span>
                 <span className="price-tag font-semibold">{formatPriceCents(order.totalCents)}</span>
               </div>
+                  <div className="mt-3 flex gap-3 text-xs font-semibold">
+                    <Link href={`/orders/${order.id}/chat`} className="text-ink underline">💬 Chat</Link>
+                    <Link href={`/orders/${order.id}/tracking`} className="text-ink underline">📦 Track Shipment</Link>
+                  </div>
             </li>
           ))}
         </ul>

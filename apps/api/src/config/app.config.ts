@@ -11,4 +11,12 @@ export default () => ({
     refreshSecret: process.env.JWT_REFRESH_SECRET ?? 'dev_only_change_me_refresh',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '30d',
   },
+  courier: {
+    leopards: {
+      apiKey: process.env.LEOPARDS_API_KEY ?? '',
+      apiPassword: process.env.LEOPARDS_API_PASSWORD ?? '',
+      baseUrl: process.env.LEOPARDS_BASE_URL ?? 'https://merchantapi.leopardscourier.com/api',
+      bookingCode: process.env.LEOPARDS_BOOKING_CODE ?? '',
+    },
+  },
 });

@@ -106,6 +106,8 @@ model User {
 
   oauthAccounts   OAuthAccount[]
   refreshTokens   RefreshToken[]
+  conversationParticipants ConversationParticipant[]
+  messages                 Message[]
   addresses       Address[]
   vendor          Vendor?
   cart            Cart?
@@ -368,6 +370,8 @@ model Order {
   user           User          @relation(fields: [userId], references: [id])
   userId         String
   vendor         Vendor        @relation(fields: [vendorId], references: [id])
+  conversations Conversation[]
+  shipment     Shipment?
   vendorId       String
   shippingAddress Address      @relation(fields: [addressId], references: [id])
   addressId      String
@@ -517,4 +521,117 @@ model Announcement {
   startsAt  DateTime?
   endsAt    DateTime?
   createdAt DateTime  @default(now())
+}
+
+enum ConversationType {
+  ORDER_VERIFICATION
+  CUSTOMER_VENDOR
+  VENDOR_ADMIN_SUPPORT
+}
+
+enum ConversationStatus {
+  OPEN
+  RESOLVED
+}
+
+enum CourierProvider {
+  LEOPARDS
+  TCS
+  POSTEX
+  MANUAL
+}
+
+enum ShipmentStatus {
+  PENDING
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  RETURNED
+  FAILED
+}
+
+enum ShipmentEventSource {
+  WEBHOOK
+  POLL
+  MANUAL
+}
+
+model Conversation {
+  id            String             @id @default(uuid())
+  orderId       String?
+  order         Order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type          ConversationType
+  status        ConversationStatus @default(OPEN)
+  escalated     Boolean            @default(false)
+  participants  ConversationParticipant[]
+  messages      Message[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([escalated])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           Role
+  joinedAt       DateTime     @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderRole     Role
+  body           String?
+  imageUrl       String?
+  filtered       Boolean      @default(false)
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+}
+
+model Shipment {
+  id                 String              @id @default(uuid())
+  orderId            String              @unique
+  order               Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  courierProvider    CourierProvider     @default(LEOPARDS)
+  trackingNumber     String?
+  courierRefId       String?
+  status             ShipmentStatus      @default(PENDING)
+  originCity         String?
+  destinationCity    String?
+  estimatedDeliveryAt DateTime?
+  events             ShipmentEvent[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([status])
+  @@index([trackingNumber])
+}
+
+model ShipmentEvent {
+  id          String              @id @default(uuid())
+  shipmentId  String
+  shipment    Shipment            @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status      ShipmentStatus
+  location    String?
+  description String?
+  source      ShipmentEventSource @default(MANUAL)
+  occurredAt  DateTime            @default(now())
+
+  @@index([shipmentId])
 }
