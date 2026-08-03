@@ -17,8 +17,14 @@ export default function AdminMessagesPage() {
     if (filter === 'escalated') params.set('escalated', 'true');
     if (filter === 'open') params.set('status', 'OPEN');
     authFetch(`/admin/conversations?${params.toString()}`)
-      .then((res) => res.json())
-      .then(setConversations)
+      .then(async (res) => {
+        if (!res.ok) {
+          setConversations([]);
+          return;
+        }
+        const data = await res.json();
+        setConversations(Array.isArray(data) ? data : (data?.data ?? []));
+      })
       .finally(() => setLoading(false));
   };
 
