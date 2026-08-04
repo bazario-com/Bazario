@@ -9,8 +9,8 @@ interface VendorOrder {
   orderNumber: string;
   status: string;
   totalCents: number;
-  placedAt: string;
   paymentMethod: string;
+  placedAt: string;
   items: { titleSnapshot: string; quantity: number }[];
   user: { firstName: string; lastName: string };
   shippingAddress: { line1: string; city: string; phone: string };
@@ -49,6 +49,16 @@ export default function VendorOrdersPage() {
         method: 'PATCH',
         body: JSON.stringify({ status }),
       });
+      await load();
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const handleCreateShipment = async (orderId: string) => {
+    setUpdating(orderId);
+    try {
+      await authFetch(`/admin/shipments/order/${orderId}`, { method: 'POST' });
       await load();
     } finally {
       setUpdating(null);
@@ -108,6 +118,15 @@ export default function VendorOrdersPage() {
                       {action.label}
                     </button>
                   ))}
+                  {order.status === 'PROCESSING' && (
+                    <button
+                      disabled={updating === order.id}
+                      onClick={() => handleCreateShipment(order.id)}
+                      className="rounded-card px-3 py-1.5 text-sm font-medium bg-forest text-white hover:bg-forest-700"
+                    >
+                      Create Shipment
+                    </button>
+                  )}
                 </div>
               </div>
             </li>
