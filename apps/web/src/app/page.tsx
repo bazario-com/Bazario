@@ -53,7 +53,11 @@ export default async function HomePage() {
                 href={`/category/${category.slug}`}
                 className="flex flex-col items-center gap-2 rounded-card bg-surface p-4 text-center shadow-card transition hover:shadow-cardHover"
               >
-                <div className="h-12 w-12 rounded-full bg-base" aria-hidden />
+                {category.imageUrl ? (
+                  <img src={category.imageUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-base" aria-hidden />
+                )}
                 <span className="text-xs font-medium">{category.name}</span>
               </Link>
             ))}

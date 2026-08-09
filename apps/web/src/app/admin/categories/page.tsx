@@ -9,12 +9,13 @@ interface Category {
   slug: string;
   parentId: string | null;
   isActive: boolean;
+  imageUrl?: string | null;
 }
 
 export default function AdminCategoriesPage() {
   const { user, authFetch } = useAuth();
   const [categories, setCategories] = useState<Category[] | null>(null);
-  const [form, setForm] = useState({ name: '', slug: '', parentId: '' });
+  const [form, setForm] = useState({ name: '', slug: '', parentId: '', imageUrl: '' });
   const [error, setError] = useState<string | null>(null);
 
   const load = () =>
@@ -43,14 +44,18 @@ export default function AdminCategoriesPage() {
     setError(null);
     const res = await authFetch('/categories', {
       method: 'POST',
-      body: JSON.stringify({ ...form, parentId: form.parentId || undefined }),
+      body: JSON.stringify({
+        ...form,
+        parentId: form.parentId || undefined,
+        imageUrl: form.imageUrl || undefined,
+      }),
     });
     const data = await res.json();
     if (!res.ok) {
       setError(data.message ?? 'Could not create category');
       return;
     }
-    setForm({ name: '', slug: '', parentId: '' });
+    setForm({ name: '', slug: '', parentId: '', imageUrl: '' });
     load();
   };
 
@@ -101,6 +106,21 @@ export default function AdminCategoriesPage() {
             </option>
           ))}
         </select>
+        <input
+          type="url"
+          placeholder="https://example.com/image.jpg (hosted image URL)"
+          value={form.imageUrl}
+          onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
+          className="w-full rounded-card border border-line px-3 py-2 text-sm"
+        />
+        {form.imageUrl && (
+          <img
+            src={form.imageUrl}
+            alt="Preview"
+            className="h-20 w-20 rounded-card object-cover"
+            onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+          />
+        )}
         {error && <p className="text-sm text-chili">{error}</p>}
         <button type="submit" className="rounded-card bg-marigold px-5 py-2 text-sm font-semibold text-ink hover:bg-marigold-600">
           Create
@@ -113,7 +133,12 @@ export default function AdminCategoriesPage() {
         <ul className="space-y-2">
           {categories.map((c) => (
             <li key={c.id} className="flex items-center justify-between rounded-card bg-surface p-3 shadow-card">
-              <span className={c.parentId ? 'ml-4 text-sm' : 'font-medium'}>{c.name}</span>
+              <div className="flex items-center gap-3">
+                {c.imageUrl && (
+                  <img src={c.imageUrl} alt={c.name} className="h-10 w-10 rounded-card object-cover" />
+                )}
+                <span className={c.parentId ? 'ml-4 text-sm' : 'font-medium'}>{c.name}</span>
+              </div>
               <button onClick={() => handleDelete(c.id)} className="text-sm text-muted hover:text-chili">
                 Delete
               </button>
