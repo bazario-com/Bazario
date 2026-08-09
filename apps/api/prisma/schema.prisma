@@ -195,7 +195,7 @@ model Vendor {
   businessRegNumber String?
   taxId             String?
   status            VendorStatus @default(PENDING)
-  commissionRateBps Int          @default(1000) // basis points, e.g. 1000 = 10%
+  commissionRateBps Int          @default(300) // basis points, e.g. 300 = 3%
   approvedAt        DateTime?
   rejectedReason    String?
   createdAt         DateTime     @default(now())
