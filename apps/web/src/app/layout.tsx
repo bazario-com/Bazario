@@ -26,8 +26,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Shopina',
     description: 'Shop everything, from every corner of Pakistan.',
+    images: ['/logo.png'],
     type: 'website',
   },
+  icons: { icon: '/logo.png' },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
