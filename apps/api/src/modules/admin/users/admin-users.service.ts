@@ -56,4 +56,55 @@ export class AdminUsersService {
 
     return updated;
   }
+
+  async exportToExcel() {
+    const ExcelJS = require('exceljs');
+    const users = await this.prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        vendor: { select: { businessName: true, store: { select: { address: true, city: true, contactPhone: true } } } },
+      },
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Contacts');
+    sheet.columns = [
+      { header: 'First Name', key: 'firstName', width: 18 },
+      { header: 'Last Name', key: 'lastName', width: 18 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Phone', key: 'phone', width: 18 },
+      { header: 'Role', key: 'role', width: 12 },
+      { header: 'Active', key: 'isActive', width: 10 },
+      { header: 'Business Name', key: 'businessName', width: 24 },
+      { header: 'Shop Address', key: 'address', width: 30 },
+      { header: 'City', key: 'city', width: 16 },
+      { header: 'Shop Contact', key: 'shopContact', width: 18 },
+      { header: 'Joined', key: 'createdAt', width: 20 },
+    ];
+
+    for (const u of users) {
+      sheet.addRow({
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email,
+        phone: u.phone ?? '',
+        role: u.role,
+        isActive: u.isActive ? 'Yes' : 'No',
+        businessName: u.vendor?.businessName ?? '',
+        address: u.vendor?.store?.address ?? '',
+        city: u.vendor?.store?.city ?? '',
+        shopContact: u.vendor?.store?.contactPhone ?? '',
+        createdAt: u.createdAt.toISOString().slice(0, 10),
+      });
+    }
+
+    return workbook.xlsx.writeBuffer();
+  }
 }
