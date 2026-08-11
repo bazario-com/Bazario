@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { AdminVendorsService } from './admin-vendors.service';
 import { RejectDto } from '../dto/reject.dto';
+import { SetCommissionDto } from './dto/set-commission.dto';
 import { Roles } from '../../../common/decorators/roles.decorator';
 
 @Roles(Role.ADMIN, Role.SUPER_ADMIN)
@@ -22,5 +23,10 @@ export class AdminVendorsController {
   @Post(':id/reject')
   reject(@Param('id') id: string, @Body() dto: RejectDto) {
     return this.adminVendorsService.reject(id, dto.reason);
+  }
+
+  @Patch(':id/commission')
+  setCommission(@Param('id') id: string, @Body() dto: SetCommissionDto) {
+    return this.adminVendorsService.setCommission(id, dto.commissionRateBps);
   }
 }

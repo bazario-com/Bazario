@@ -40,4 +40,14 @@ export class AdminVendorsService {
       data: { status: 'REJECTED', rejectedReason: reason },
     });
   }
+
+  async setCommission(vendorId: string, commissionRateBps: number) {
+    const vendor = await this.prisma.vendor.findUnique({ where: { id: vendorId } });
+    if (!vendor) throw new NotFoundException('Vendor not found');
+
+    return this.prisma.vendor.update({
+      where: { id: vendorId },
+      data: { commissionRateBps },
+    });
+  }
 }
