@@ -10,9 +10,13 @@ export default function VendorRegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     businessName: '',
+    businessRegNumber: '',
     storeName: '',
     storeSlug: '',
     storeDescription: '',
+    address: '',
+    city: '',
+    contactPhone: '',
   });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -67,47 +71,97 @@ export default function VendorRegisterPage() {
         Tell us about your business. An admin will review your application before your store goes live.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Business name</label>
-          <input
-            required
-            value={form.businessName}
-            onChange={update('businessName')}
-            className="w-full rounded-card border border-line px-4 py-2.5"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">Store name</label>
-          <input
-            required
-            value={form.storeName}
-            onChange={update('storeName')}
-            className="w-full rounded-card border border-line px-4 py-2.5"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">Store URL</label>
-          <div className="flex items-center gap-1 text-sm text-muted">
-            <span>bazaario.com/store/</span>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4 rounded-card bg-surface p-5 shadow-card">
+          <p className="text-sm font-semibold text-ink">Business details</p>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Business name</label>
             <input
               required
-              value={form.storeSlug}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, storeSlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))
-              }
-              className="flex-1 rounded-card border border-line px-3 py-2 text-ink900text"
+              value={form.businessName}
+              onChange={update('businessName')}
+              className="w-full rounded-card border border-line px-4 py-2.5"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">NTN / Business registration number (optional)</label>
+            <input
+              value={form.businessRegNumber}
+              onChange={update('businessRegNumber')}
+              placeholder="e.g. 1234567-8"
+              className="w-full rounded-card border border-line px-4 py-2.5"
             />
           </div>
         </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">About your store (optional)</label>
-          <textarea
-            value={form.storeDescription}
-            onChange={update('storeDescription')}
-            rows={3}
-            className="w-full rounded-card border border-line px-4 py-2.5"
-          />
+
+        <div className="space-y-4 rounded-card bg-surface p-5 shadow-card">
+          <p className="text-sm font-semibold text-ink">Store details</p>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Store name</label>
+            <input
+              required
+              value={form.storeName}
+              onChange={update('storeName')}
+              className="w-full rounded-card border border-line px-4 py-2.5"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Store URL</label>
+            <div className="flex items-center gap-1 text-sm text-muted">
+              <span>shopina.pk/store/</span>
+              <input
+                required
+                value={form.storeSlug}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, storeSlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))
+                }
+                className="flex-1 rounded-card border border-line px-3 py-2 text-ink900text"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">About your store (optional)</label>
+            <textarea
+              value={form.storeDescription}
+              onChange={update('storeDescription')}
+              rows={3}
+              className="w-full rounded-card border border-line px-4 py-2.5"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-card bg-surface p-5 shadow-card">
+          <p className="text-sm font-semibold text-ink">Shop / factory address & contact</p>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Address</label>
+            <input
+              required
+              value={form.address}
+              onChange={update('address')}
+              placeholder="Shop or factory address"
+              className="w-full rounded-card border border-line px-4 py-2.5"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">City</label>
+            <input
+              required
+              value={form.city}
+              onChange={update('city')}
+              className="w-full rounded-card border border-line px-4 py-2.5"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Contact phone</label>
+            <input
+              required
+              type="tel"
+              value={form.contactPhone}
+              onChange={update('contactPhone')}
+              placeholder="03XXXXXXXXX"
+              className="w-full rounded-card border border-line px-4 py-2.5"
+            />
+          </div>
         </div>
 
         {error && <p className="text-sm text-chili">{error}</p>}
