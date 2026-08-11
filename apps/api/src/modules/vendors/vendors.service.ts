@@ -61,6 +61,9 @@ export class VendorsService {
           name: dto.storeName,
           slug: dto.storeSlug,
           description: dto.storeDescription,
+          address: dto.address,
+          city: dto.city,
+          contactPhone: dto.contactPhone,
         },
       });
 

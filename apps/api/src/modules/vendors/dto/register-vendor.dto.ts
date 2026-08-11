@@ -30,4 +30,18 @@ export class RegisterVendorDto {
   @IsString()
   @MaxLength(500)
   storeDescription?: string;
+
+  @IsString()
+  @MinLength(5)
+  @MaxLength(200)
+  address: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(50)
+  city: string;
+
+  @IsString()
+  @Matches(/^[0-9+\- ]{7,20}$/, { message: 'Enter a valid contact phone number' })
+  contactPhone: string;
 }
