@@ -16,6 +16,7 @@ export class AdminUsersService {
         lastName: true,
         role: true,
         isActive: true,
+        phone: true,
         createdAt: true,
         lastLoginAt: true,
       },
