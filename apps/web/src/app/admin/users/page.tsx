@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 interface AdminUser {
   id: string;
   email: string;
+  phone?: string | null;
   firstName: string;
   lastName: string;
   role: string;
@@ -60,6 +61,7 @@ export default function AdminUsersPage() {
                   </span>
                 </p>
                 <p className="text-sm text-muted">{u.email}</p>
+                {u.phone && <p className="text-xs text-muted">{u.phone}</p>}
               </div>
               <button
                 onClick={() => toggleActive(u)}
