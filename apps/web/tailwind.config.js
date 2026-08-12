@@ -14,13 +14,13 @@ module.exports = {
           700: '#14342A',
           900: '#0D2318',
         },
-        // Marigold: primary CTA, price emphasis, active states.
+        // Lime: primary CTA, price emphasis, active states — matches the Shopina logo accent.
         marigold: {
-          DEFAULT: '#F5A623',
-          50: '#FEF6E7',
-          100: '#FCE7BE',
-          400: '#F5A623',
-          600: '#D98C0C',
+          DEFAULT: '#7ED321',
+          50: '#F3FBEA',
+          100: '#DFF5C4',
+          400: '#7ED321',
+          600: '#5FA818',
         },
         // Chili: discount badges, sale ribbons, destructive actions.
         chili: {
