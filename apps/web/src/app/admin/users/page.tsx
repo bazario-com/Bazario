@@ -21,6 +21,17 @@ export default function AdminUsersPage() {
 
   const load = () => authFetch('/admin/users').then((res) => res.json()).then(setUsers);
 
+  const exportContacts = async () => {
+    const res = await authFetch('/admin/users/export');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shopina-contacts-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     if (user) load();
   }, [user]);
@@ -43,7 +54,10 @@ export default function AdminUsersPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">User Management</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">User Management</h1>
+        <button onClick={exportContacts} className="rounded-card bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-700">Export to Excel</button>
+      </div>
 
       {error && <p className="mb-4 rounded-card bg-chili-50 px-4 py-2 text-sm text-chili-600">{error}</p>}
 
