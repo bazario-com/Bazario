@@ -48,11 +48,12 @@ export default async function HomePage() {
               <span>✓ Easy Returns</span>
               <span>✓ Fast Delivery</span>
               <span>✓ Verified Sellers</span>
+              <span>✓ 100% Safe</span>
             </div>
           </div>
-          <div className="relative hidden items-center justify-center md:flex">
-            <div className="absolute h-72 w-72 rounded-full bg-gradient-to-br from-marigold-100 to-ink-100" aria-hidden />
-            <img src="/logo.png" alt="Shopina" className="relative h-64 w-64 object-contain drop-shadow-xl" />
+          <div className="relative flex items-center justify-center">
+            <div className="absolute h-40 w-40 rounded-full bg-gradient-to-br from-marigold-100 to-ink-100 md:h-72 md:w-72" aria-hidden />
+            <img src="/logo.png" alt="Shopina" className="relative h-36 w-36 object-contain drop-shadow-xl md:h-64 md:w-64" />
           </div>
         </div>
       </section>
