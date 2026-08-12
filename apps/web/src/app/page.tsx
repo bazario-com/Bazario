@@ -60,7 +60,7 @@ export default async function HomePage() {
 
       {/* Category strip */}
       {categories.length > 0 && (
-        <section aria-labelledby="shop-by-category">
+        <section id="categories" aria-labelledby="shop-by-category">
           <div className="mb-5">
             <h2 id="shop-by-category" className="text-xl font-display font-bold text-ink-700">
               Explore Shopina
@@ -92,12 +92,17 @@ export default async function HomePage() {
 
       {/* Flash sale rail */}
       {flashSale.length > 0 && (
-        <section aria-labelledby="flash-sale" className="rounded-card bg-ink p-6">
+        <section id="mega-deals" aria-labelledby="flash-sale" className="rounded-card bg-ink p-6">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <h2 id="flash-sale" className="text-xl font-display font-bold text-white">
               🔥 Today's Mega Deals
             </h2>
-            <FlashSaleCountdown hoursFromNow={6} />
+            <div className="flex items-center gap-4">
+              <FlashSaleCountdown hoursFromNow={6} />
+              <Link href="/search?sort=discount" className="text-sm font-semibold text-marigold hover:text-marigold-400">
+                View All Deals →
+              </Link>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
             {flashSale.map((product) => (
