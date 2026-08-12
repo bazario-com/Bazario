@@ -46,7 +46,7 @@ export function Header({ categories }: { categories: Category[] }) {
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <img src="/logo.png" alt="Shopina" className="h-9 w-9 object-contain" />
           <span className="font-display text-xl font-extrabold text-ink-700">
-            Shopina<span className="text-marigold-600">.pk</span>
+            Shop<span className="text-marigold-600">i</span>na<span className="text-marigold-600">.pk</span>
           </span>
         </Link>
 
