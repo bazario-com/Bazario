@@ -112,6 +112,48 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Promo banner row */}
+      <section id="shopina-picks" aria-label="Shopina highlights" className="grid gap-4 sm:grid-cols-3">
+        <Link
+          href="/search?sort=rating"
+          className="group flex flex-col justify-between overflow-hidden rounded-card bg-ink-700 p-6 text-white transition hover:opacity-95"
+        >
+          <div>
+            <p className="text-lg font-display font-bold">Shopina Picks</p>
+            <p className="text-sm text-white/70">Curated just for you</p>
+          </div>
+          <span className="mt-4 inline-block w-fit rounded-card bg-marigold px-4 py-2 text-sm font-semibold text-ink-700 transition group-hover:bg-marigold-600">
+            Explore Picks →
+          </span>
+        </Link>
+
+        <Link
+          href="/search?sort=newest"
+          className="group flex flex-col justify-between overflow-hidden rounded-card bg-ink-50 p-6 text-ink-700 transition hover:bg-marigold-50"
+        >
+          <div>
+            <p className="text-lg font-display font-bold">New Arrivals</p>
+            <p className="text-sm text-ink-400">Fresh finds every day</p>
+          </div>
+          <span className="mt-4 inline-block w-fit rounded-card border border-ink-700 px-4 py-2 text-sm font-semibold text-ink-700 transition group-hover:border-marigold-600 group-hover:text-marigold-600">
+            Shop Now →
+          </span>
+        </Link>
+
+        <Link
+          href="/deals"
+          className="group flex flex-col justify-between overflow-hidden rounded-card bg-chili p-6 text-white transition hover:opacity-95"
+        >
+          <div>
+            <p className="text-lg font-display font-bold">Up to 70% OFF</p>
+            <p className="text-sm text-white/80">On top brands</p>
+          </div>
+          <span className="mt-4 inline-block w-fit rounded-card bg-white px-4 py-2 text-sm font-semibold text-chili transition group-hover:bg-marigold-50">
+            Shop Deals →
+          </span>
+        </Link>
+      </section>
+
       {/* Featured products */}
       {featured.length > 0 && (
         <section aria-labelledby="featured-products">
