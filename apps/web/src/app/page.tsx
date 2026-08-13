@@ -220,6 +220,31 @@ export default async function HomePage() {
         ))}
       </section>
 
+      {/* App promotion */}
+      <section className="overflow-hidden rounded-card bg-ink-700">
+        <div className="grid gap-6 p-8 md:grid-cols-2 md:items-center md:p-12">
+          <div>
+            <h2 className="font-display text-2xl font-bold text-white md:text-3xl">
+              Shopina in your pocket.
+            </h2>
+            <p className="mt-2 text-white/70">Shop anywhere. Anytime.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <span className="flex items-center gap-2 rounded-card border border-white/20 px-4 py-2.5 text-sm font-medium text-white/60">
+                <span aria-hidden>▶</span> Google Play — Coming Soon
+              </span>
+              <span className="flex items-center gap-2 rounded-card border border-white/20 px-4 py-2.5 text-sm font-medium text-white/60">
+                <span aria-hidden></span> App Store — Coming Soon
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-center">
+            <div className="flex h-56 w-40 items-center justify-center rounded-[2rem] border-4 border-white/20 bg-ink-900 md:h-64 md:w-44">
+              <img src="/logo.png" alt="Shopina app" className="h-16 w-16 object-contain opacity-80" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Recently viewed (client-rendered, logged-in users only) */}
       <RecentlyViewedSection />
     </div>
