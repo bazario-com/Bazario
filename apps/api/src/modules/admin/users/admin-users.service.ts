@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import ExcelJS from 'exceljs';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
@@ -58,7 +59,6 @@ export class AdminUsersService {
   }
 
   async exportToExcel() {
-    const ExcelJS = require('exceljs');
     const users = await this.prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
       select: {
