@@ -99,7 +99,7 @@ export default async function HomePage() {
             </h2>
             <div className="flex items-center gap-4">
               <FlashSaleCountdown hoursFromNow={6} />
-              <Link href="/search?sort=discount" className="text-sm font-semibold text-marigold hover:text-marigold-400">
+              <Link href="/deals" className="text-sm font-semibold text-marigold hover:text-marigold-400">
                 View All Deals →
               </Link>
             </div>

@@ -130,7 +130,7 @@ export function Header({ categories }: { categories: Category[] }) {
           <Link href="/#top-stores" className="hover:text-marigold-600">
             Top Stores
           </Link>
-          <Link href="/#mega-deals" className="hover:text-marigold-600">
+          <Link href="/deals" className="hover:text-marigold-600">
             Flash Deals
           </Link>
           <Link href="/search" className="hover:text-marigold-600">
