@@ -75,6 +75,55 @@ export class VendorsService {
     return this.prisma.store.update({ where: { vendorId }, data: dto });
   }
 
+  // Public storefront section — surfaces approved vendors with published
+  // products, ranked by review-weighted rating (so a 5-star store with one
+  // review doesn't outrank a 4.8-star store with hundreds).
+  async getTopStores(limit = 6) {
+    const stores = await this.prisma.store.findMany({
+      where: {
+        isActive: true,
+        vendor: { status: 'APPROVED' },
+      },
+      include: {
+        vendor: {
+          include: {
+            products: {
+              where: { status: 'PUBLISHED', deletedAt: null },
+              select: { averageRating: true, reviewCount: true },
+            },
+          },
+        },
+      },
+    });
+
+    const withStats = stores
+      .map((store) => {
+        const products = store.vendor.products;
+        const productCount = products.length;
+        const totalReviews = products.reduce((sum, p) => sum + p.reviewCount, 0);
+        const weightedRatingSum = products.reduce(
+          (sum, p) => sum + Number(p.averageRating) * p.reviewCount,
+          0,
+        );
+        const rating = totalReviews > 0 ? weightedRatingSum / totalReviews : 0;
+
+        return {
+          id: store.id,
+          name: store.name,
+          slug: store.slug,
+          logoUrl: store.logoUrl,
+          city: store.city,
+          productCount,
+          reviewCount: totalReviews,
+          rating: Math.round(rating * 10) / 10,
+        };
+      })
+      .filter((s) => s.productCount > 0)
+      .sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount);
+
+    return withStats.slice(0, limit);
+  }
+
   async getDashboardSummary(vendorId: string) {
     const [orderStats, productCount, pendingProductCount] = await Promise.all([
       this.prisma.order.aggregate({
