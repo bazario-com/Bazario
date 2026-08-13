@@ -203,6 +203,23 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Trust section */}
+      <section aria-label="Why shop on Shopina" className="grid grid-cols-2 gap-6 border-y border-line py-8 sm:grid-cols-5">
+        {[
+          { icon: '🛡️', title: 'Secure Shopping', desc: 'Your data is always safe and protected' },
+          { icon: '↩️', title: 'Easy Returns', desc: 'Hassle-free returns within policy' },
+          { icon: '🚚', title: 'Fast Delivery', desc: 'Quick delivery across Pakistan' },
+          { icon: '🎧', title: 'Customer Support', desc: "We're here to help you" },
+          { icon: '✅', title: 'Verified Sellers', desc: 'Trusted sellers with quality products' },
+        ].map((item) => (
+          <div key={item.title} className="flex flex-col items-center gap-2 text-center">
+            <span className="text-2xl" aria-hidden>{item.icon}</span>
+            <p className="text-sm font-semibold text-ink-700">{item.title}</p>
+            <p className="text-xs text-ink-400">{item.desc}</p>
+          </div>
+        ))}
+      </section>
+
       {/* Recently viewed (client-rendered, logged-in users only) */}
       <RecentlyViewedSection />
     </div>
