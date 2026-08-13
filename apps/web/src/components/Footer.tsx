@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NewsletterForm } from './NewsletterForm';
 
 const columns = [
   {
@@ -40,6 +41,15 @@ const columns = [
 export function Footer() {
   return (
     <footer className="mt-16 bg-ink-900 text-white/70">
+      <div className="border-b border-white/10 px-4 py-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h3 className="font-display text-lg font-bold text-white">Stay Updated</h3>
+            <p className="text-sm text-white/60">Get the best deals and offers straight to your inbox.</p>
+          </div>
+          <NewsletterForm />
+        </div>
+      </div>
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 py-12 md:grid-cols-4">
         {columns.map((col) => (
           <div key={col.title}>

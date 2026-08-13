@@ -92,6 +92,13 @@ export const api = {
     flashSale: () => apiFetch<ProductSummary[]>('/products/flash-sale', { next: { revalidate: 60 } }),
     bySlug: (slug: string) => apiFetch<ProductDetail>(`/products/${slug}`, { next: { revalidate: 60 } }),
   },
+  newsletter: {
+    subscribe: (email: string) =>
+      apiFetch<{ id: string; email: string }>('/newsletter/subscribe', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      }),
+  },
 };
 
 export function formatPriceCents(cents: number, currency = 'PKR'): string {
