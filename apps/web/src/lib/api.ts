@@ -1,5 +1,16 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
+export interface TopStore {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  city: string | null;
+  productCount: number;
+  reviewCount: number;
+  rating: number;
+}
+
 export interface ProductImage {
   id: string;
   url: string;
@@ -98,6 +109,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ email }),
       }),
+  },
+  vendors: {
+    topStores: (limit = 6) =>
+      apiFetch<TopStore[]>(`/vendors/top?limit=${limit}`, { next: { revalidate: 300 } }),
   },
 };
 

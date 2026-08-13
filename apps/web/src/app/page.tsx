@@ -5,10 +5,11 @@ import { FlashSaleCountdown } from '@/components/FlashSaleCountdown';
 import { RecentlyViewedSection } from '@/components/RecentlyViewedSection';
 
 export default async function HomePage() {
-  const [categories, featured, flashSale] = await Promise.all([
+  const [categories, featured, flashSale, topStores] = await Promise.all([
     api.categories.list().catch(() => []),
     api.products.featured().catch(() => []),
     api.products.flashSale().catch(() => []),
+    api.vendors.topStores(6).catch(() => []),
   ]);
 
   return (
@@ -202,6 +203,47 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Top rated stores */}
+      {topStores.length > 0 && (
+        <section id="top-stores" aria-labelledby="top-stores-heading">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <h2 id="top-stores-heading" className="text-xl font-display font-bold text-ink-700">
+              Top Rated Stores
+            </h2>
+            <Link href="/search" className="text-sm font-semibold text-marigold-600 hover:text-marigold">
+              View All Stores →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {topStores.map((store) => (
+              <Link
+                key={store.id}
+                href={`/search?q=${encodeURIComponent(store.name)}`}
+                className="flex items-center gap-4 rounded-card bg-surface p-4 shadow-card transition hover:-translate-y-1 hover:shadow-cardHover"
+              >
+                {store.logoUrl ? (
+                  <img
+                    src={store.logoUrl}
+                    alt=""
+                    className="h-14 w-14 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-ink-50 font-display text-lg font-bold text-ink-700">
+                    {store.name.charAt(0)}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-ink-700">{store.name}</p>
+                  <p className="text-xs text-muted">
+                    ★ {store.rating.toFixed(1)} ({store.reviewCount}) · {store.productCount} products
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Trust section */}
       <section aria-label="Why shop on Shopina" className="grid grid-cols-2 gap-6 border-y border-line py-8 sm:grid-cols-5">
