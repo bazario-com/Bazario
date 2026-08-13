@@ -52,9 +52,27 @@ export default async function HomePage() {
               <span>✓ 100% Safe</span>
             </div>
           </div>
-          <div className="relative flex items-center justify-center">
+          <div className="relative flex h-72 items-center justify-center md:h-96">
             <div className="absolute h-40 w-40 rounded-full bg-gradient-to-br from-marigold-100 to-ink-100 md:h-72 md:w-72" aria-hidden />
-            <img src="/logo.png" alt="Shopina" className="relative h-36 w-36 object-contain drop-shadow-xl md:h-64 md:w-64" />
+            <img src="/logo.png" alt="Shopina" className="relative z-10 h-36 w-36 object-contain drop-shadow-xl md:h-64 md:w-64" />
+
+            {/* Floating product-category chips — icon-based since we don't yet have
+                real product photography; gives the collage feel without needing assets. */}
+            <div className="absolute left-2 top-4 flex h-14 w-14 -rotate-6 items-center justify-center rounded-2xl bg-white text-2xl shadow-cardHover md:left-6 md:top-8 md:h-20 md:w-20 md:text-4xl" aria-hidden>
+              📱
+            </div>
+            <div className="absolute right-0 top-0 flex h-14 w-14 rotate-6 items-center justify-center rounded-2xl bg-white text-2xl shadow-cardHover md:right-4 md:top-4 md:h-20 md:w-20 md:text-4xl" aria-hidden>
+              👜
+            </div>
+            <div className="absolute bottom-6 left-0 flex h-14 w-14 rotate-3 items-center justify-center rounded-2xl bg-white text-2xl shadow-cardHover md:bottom-10 md:left-2 md:h-20 md:w-20 md:text-4xl" aria-hidden>
+              👟
+            </div>
+            <div className="absolute bottom-2 right-2 flex h-14 w-14 -rotate-3 items-center justify-center rounded-2xl bg-white text-2xl shadow-cardHover md:bottom-6 md:right-8 md:h-20 md:w-20 md:text-4xl" aria-hidden>
+              💄
+            </div>
+            <div className="absolute right-10 top-1/2 hidden h-16 w-16 -translate-y-1/2 rotate-6 items-center justify-center rounded-2xl bg-white text-2xl shadow-cardHover md:flex md:text-3xl" aria-hidden>
+              ⌚
+            </div>
           </div>
         </div>
       </section>
