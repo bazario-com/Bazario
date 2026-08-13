@@ -638,3 +638,13 @@ model ShipmentEvent {
 
   @@index([shipmentId])
 }
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("newsletter_subscribers")
+}
