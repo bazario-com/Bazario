@@ -19,6 +19,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { ShipmentsModule } from './modules/shipments/shipments.module';
 import { NewsletterModule } from './modules/newsletter/newsletter.module';
+import { StoreFollowsModule } from './modules/store-follows/store-follows.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -52,6 +53,7 @@ import appConfig from './config/app.config';
     MessagingModule,
     ShipmentsModule,
     NewsletterModule,
+    StoreFollowsModule,
   ],
   providers: [
     // Without this, @Throttle() on individual routes (e.g. auth login/register)
