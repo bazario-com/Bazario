@@ -2,18 +2,25 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { VendorOrdersService } from './vendor-orders.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { RewardsService } from '../../rewards/rewards.service';
 
 describe('VendorOrdersService', () => {
   let service: VendorOrdersService;
   let prisma: any;
+  let rewardsService: any;
 
   beforeEach(async () => {
     prisma = {
       order: { findFirst: jest.fn(), update: jest.fn() },
     };
+    rewardsService = { earnForDeliveredOrder: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [VendorOrdersService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        VendorOrdersService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: RewardsService, useValue: rewardsService },
+      ],
     }).compile();
 
     service = module.get(VendorOrdersService);

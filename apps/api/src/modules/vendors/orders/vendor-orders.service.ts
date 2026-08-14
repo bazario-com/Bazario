@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { RewardsService } from '../../rewards/rewards.service';
 
 // The only forward moves a vendor can make. Anything not listed here as a
 // key (e.g. DELIVERED, CANCELLED) is terminal from the vendor's side.
@@ -12,7 +13,10 @@ const ALLOWED_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus[]>> = {
 
 @Injectable()
 export class VendorOrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly rewardsService: RewardsService,
+  ) {}
 
   findAllForVendor(vendorId: string) {
     return this.prisma.order.findMany({
@@ -45,7 +49,7 @@ export class VendorOrdersService {
       );
     }
 
-    return this.prisma.order.update({
+    const updated = await this.prisma.order.update({
       where: { id: orderId },
       data: {
         status: nextStatus,
@@ -56,5 +60,11 @@ export class VendorOrdersService {
           : {}),
       },
     });
+
+    if (nextStatus === 'DELIVERED') {
+      await this.rewardsService.earnForDeliveredOrder(order.userId, order.id, order.totalCents);
+    }
+
+    return updated;
   }
 }

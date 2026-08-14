@@ -117,6 +117,7 @@ model User {
   recentlyViewed  RecentlyViewed[]
   couponRedemptions CouponRedemption[]
   storeFollows      StoreFollow[]
+  rewardsAccount    RewardsAccount?
 
   @@index([role])
   @@index([createdAt])
@@ -395,6 +396,7 @@ model Order {
   updatedAt      DateTime      @updatedAt
 
   items OrderItem[]
+  rewardsTransactions RewardsTransaction[]
 
   @@index([userId])
   @@index([vendorId])
@@ -663,4 +665,40 @@ model StoreFollow {
   @@unique([userId, storeId])
   @@index([storeId])
   @@map("store_follows")
+}
+
+enum RewardsTransactionType {
+  EARNED
+  REDEEMED
+  ADJUSTED
+}
+
+model RewardsAccount {
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String   @unique
+  pointsBalance  Int      @default(0)
+  lifetimePoints Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  transactions RewardsTransaction[]
+
+  @@map("rewards_accounts")
+}
+
+model RewardsTransaction {
+  id        String                 @id @default(uuid())
+  account   RewardsAccount         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId String
+  points    Int // positive for earned, negative for redeemed
+  type      RewardsTransactionType
+  reason    String?
+  order     Order?                 @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  orderId   String?
+  createdAt DateTime               @default(now())
+
+  @@index([accountId])
+  @@index([orderId])
+  @@map("rewards_transactions")
 }
