@@ -6,6 +6,7 @@ import * as argon2 from 'argon2';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ReferralsService } from '../referrals/referrals.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -40,6 +41,7 @@ describe('AuthService', () => {
           provide: ConfigService,
           useValue: { get: jest.fn((key: string) => (key.includes('Secret') ? 'test-secret' : '15m')) },
         },
+        { provide: ReferralsService, useValue: { redeemCode: jest.fn() } },
       ],
     }).compile();
 

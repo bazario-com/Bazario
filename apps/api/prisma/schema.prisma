@@ -118,6 +118,9 @@ model User {
   couponRedemptions CouponRedemption[]
   storeFollows      StoreFollow[]
   rewardsAccount    RewardsAccount?
+  referralCode      ReferralCode?
+  referralsMade     Referral[] @relation("ReferralsMade")
+  referralReceived  Referral?  @relation("ReferralsReceived")
 
   @@index([role])
   @@index([createdAt])
@@ -701,4 +704,27 @@ model RewardsTransaction {
   @@index([accountId])
   @@index([orderId])
   @@map("rewards_transactions")
+}
+
+model ReferralCode {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("referral_codes")
+}
+
+model Referral {
+  id             String    @id @default(uuid())
+  referrer       User      @relation("ReferralsMade", fields: [referrerUserId], references: [id], onDelete: Cascade)
+  referrerUserId String
+  referred       User      @relation("ReferralsReceived", fields: [referredUserId], references: [id], onDelete: Cascade)
+  referredUserId String    @unique
+  rewardedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([referrerUserId])
+  @@map("referrals")
 }

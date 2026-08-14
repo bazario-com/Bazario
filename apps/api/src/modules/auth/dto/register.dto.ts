@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @IsEmail()
@@ -23,4 +23,8 @@ export class RegisterDto {
   @Matches(/[0-9]/, { message: 'Password must contain a number' })
   @Matches(/[^a-zA-Z0-9]/, { message: 'Password must contain a symbol' })
   password: string;
+
+  @IsOptional()
+  @IsString()
+  referralCode?: string;
 }

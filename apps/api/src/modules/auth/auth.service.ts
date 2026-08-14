@@ -11,6 +11,7 @@ import { UsersService } from '../users/users.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ReferralsService } from '../referrals/referrals.service';
 
 export interface TokenPair {
   accessToken: string;
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly referralsService: ReferralsService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -50,6 +52,11 @@ export class AuthService {
       lastName: dto.lastName,
       passwordHash,
     });
+
+    if (dto.referralCode) {
+      // Best-effort: a bad/self referral code must never block signup.
+      await this.referralsService.redeemCode(user.id, dto.referralCode).catch(() => null);
+    }
 
     const tokens = await this.issueTokenPair(user.id, user.email, user.role);
     return { user: this.usersService.toSafeUser(user), ...tokens };
