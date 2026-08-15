@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { formatPriceCents } from '@/lib/api';
+import { AccountShell } from '@/components/AccountShell';
 
 interface OrderItem {
   id: string;
@@ -64,7 +65,7 @@ function OrdersContent() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <AccountShell>
       <h1 className="mb-2 text-2xl font-bold">Your Orders</h1>
 
       {justPlaced && (
@@ -121,7 +122,7 @@ function OrdersContent() {
           ))}
         </ul>
       )}
-    </div>
+    </AccountShell>
   );
 }
 

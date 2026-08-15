@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { formatPriceCents } from '@/lib/api';
+import { AccountShell } from '@/components/AccountShell';
 
 interface WishlistEntry {
   id: string;
@@ -46,7 +47,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <AccountShell>
       <h1 className="mb-6 text-2xl font-bold">Your Wishlist</h1>
 
       {items === null ? (
@@ -77,6 +78,6 @@ export default function WishlistPage() {
           ))}
         </ul>
       )}
-    </div>
+    </AccountShell>
   );
 }

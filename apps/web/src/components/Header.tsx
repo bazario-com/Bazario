@@ -100,13 +100,22 @@ export function Header({ categories }: { categories: Category[] }) {
             </div>
           )}
 
-          <Link
-            href={user ? '/account' : '/login'}
-            aria-label={user ? 'My account' : 'Log in'}
-            className="hover:text-marigold-600 md:hidden"
-          >
-            👤
-          </Link>
+          {user ? (
+            <Link
+              href="/account"
+              aria-label="My account"
+              className="hover:text-marigold-600 md:hidden"
+            >
+              👤
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-card bg-ink-700 px-3 py-1.5 text-xs font-semibold text-white md:hidden"
+            >
+              Log in
+            </Link>
+          )}
 
           <Link href="/wishlist" aria-label="Wishlist" className="hover:text-marigold-600">
             ♡
