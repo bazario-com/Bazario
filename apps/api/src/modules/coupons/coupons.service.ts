@@ -18,6 +18,33 @@ export interface CouponApplication {
 export class CouponsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Coupons a logged-in customer can currently use — active, within their
+  // date window, and (if capped) not yet fully redeemed platform-wide.
+  async listAvailableForUser() {
+    const now = new Date();
+    const coupons = await this.prisma.coupon.findMany({
+      where: {
+        isActive: true,
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+      },
+      include: { _count: { select: { redemptions: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return coupons
+      .filter((c) => !c.expiresAt || c.expiresAt >= now)
+      .filter((c) => c.maxRedemptions == null || c._count.redemptions < c.maxRedemptions)
+      .map((c) => ({
+        id: c.id,
+        code: c.code,
+        description: c.description,
+        discountType: c.discountType,
+        discountValue: c.discountValue,
+        minOrderCents: c.minOrderCents,
+        expiresAt: c.expiresAt,
+      }));
+  }
+
   async create(vendorId: string | null, dto: CreateCouponDto) {
     if (dto.discountType === CouponDiscountType.PERCENTAGE && dto.discountValue > 100) {
       throw new BadRequestException('Percentage discount cannot exceed 100');

@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Post } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Post } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { CouponsService } from './coupons.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
@@ -12,6 +12,11 @@ export class CouponsController {
     private readonly couponsService: CouponsService,
     private readonly vendorsService: VendorsService,
   ) {}
+
+  @Get('me')
+  listAvailable() {
+    return this.couponsService.listAvailableForUser();
+  }
 
   // Vendors can only create coupons scoped to their own store — vendorId is
   // derived from the authenticated user, never accepted from the request
