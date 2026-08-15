@@ -152,7 +152,12 @@ export class OrdersService {
     return this.prisma.order.findMany({
       where: { userId },
       orderBy: { placedAt: 'desc' },
-      include: { items: true, vendor: { include: { store: true } } },
+      include: {
+        items: {
+          include: { product: { include: { images: { take: 1, orderBy: { sortOrder: 'asc' } } } } },
+        },
+        vendor: { include: { store: true } },
+      },
     });
   }
 
