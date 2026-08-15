@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 
 const LINKS = [
   { href: '/account', label: 'Dashboard', icon: '🏠' },
@@ -16,6 +17,7 @@ const LINKS = [
 
 export function AccountSidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   return (
     <>
@@ -40,6 +42,15 @@ export function AccountSidebar() {
               </li>
             );
           })}
+          <li className="mt-4 border-t border-line pt-4">
+            <button
+              onClick={() => logout()}
+              className="flex w-full items-center gap-3 rounded-card px-3 py-2.5 text-sm font-medium text-muted transition hover:bg-base hover:text-chili"
+            >
+              <span aria-hidden>🚪</span>
+              Logout
+            </button>
+          </li>
         </ul>
       </nav>
 
@@ -65,6 +76,15 @@ export function AccountSidebar() {
               </li>
             );
           })}
+          <li>
+            <button
+              onClick={() => logout()}
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-chili-50 px-3.5 py-2 text-xs font-semibold text-chili-600"
+            >
+              <span aria-hidden>🚪</span>
+              Logout
+            </button>
+          </li>
         </ul>
       </nav>
     </>
