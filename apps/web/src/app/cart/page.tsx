@@ -52,7 +52,15 @@ export default function CartPage() {
               key={item.id}
               className="flex gap-4 rounded-card bg-surface p-4 shadow-card"
             >
-              <div className="h-20 w-20 shrink-0 rounded-card bg-base" />
+              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-card bg-base">
+                {item.product.images[0] ? (
+                  <img
+                    src={item.product.images[0].url}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : null}
+              </div>
               <div className="flex flex-1 flex-col justify-between">
                 <div>
                   <Link href={`/product/${item.product.slug}`} className="font-medium hover:text-ink">
