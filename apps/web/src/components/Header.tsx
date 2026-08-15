@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -44,7 +45,7 @@ export function Header({ categories }: { categories: Category[] }) {
       {/* Main bar */}
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <img src="/logo.png" alt="Shopina" className="h-9 w-9 object-contain" />
+          <Image src="/logo.png" alt="Shopina" width={36} height={36} priority className="h-9 w-9 object-contain" />
           <span className="font-display text-xl font-extrabold text-ink-700">
             Shop<span className="text-marigold-600">i</span>na<span className="text-marigold-600">.pk</span>
           </span>
