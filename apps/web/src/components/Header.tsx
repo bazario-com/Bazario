@@ -100,6 +100,14 @@ export function Header({ categories }: { categories: Category[] }) {
             </div>
           )}
 
+          <Link
+            href={user ? '/account' : '/login'}
+            aria-label={user ? 'My account' : 'Log in'}
+            className="hover:text-marigold-600 md:hidden"
+          >
+            👤
+          </Link>
+
           <Link href="/wishlist" aria-label="Wishlist" className="hover:text-marigold-600">
             ♡
           </Link>
