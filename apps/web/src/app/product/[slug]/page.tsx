@@ -85,7 +85,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
           {product.images.length > 1 && (
             <div className="flex gap-2">
               {product.images.slice(1, 5).map((img) => (
-                <div key={img.id} className="h-16 w-16 rounded-card bg-base" />
+                <div key={img.id} className="h-16 w-16 overflow-hidden rounded-card bg-base">
+                  <img src={img.url} alt={img.altText ?? product.title} className="h-full w-full object-cover" />
+                </div>
               ))}
             </div>
           )}
