@@ -124,8 +124,41 @@ export class VendorsService {
     return withStats.slice(0, limit);
   }
 
-  async getDashboardSummary(vendorId: string) {
+  private resolvePeriod(period?: string): Date | undefined {
+    if (!period || period === 'all') return undefined;
+    const now = new Date();
+    const days = { today: 1, '7d': 7, '30d': 30, '90d': 90 }[period];
+    if (!days) return undefined;
+    const from = new Date(now);
+    from.setDate(from.getDate() - days);
+    from.setHours(0, 0, 0, 0);
+    return from;
+  }
+
+  // View-only — no reply/response field exists on the Review model, so this
+  // deliberately does not offer a "reply" action.
+  async getReviewsForVendor(vendorId: string, page = 1, pageSize = 20) {
+    const where = { product: { vendorId } };
+    const [reviews, total] = await Promise.all([
+      this.prisma.review.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          product: { select: { id: true, title: true, slug: true } },
+          user: { select: { firstName: true, lastName: true } },
+        },
+      }),
+      this.prisma.review.count({ where }),
+    ]);
+    return { reviews, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
+  }
+
+  async getDashboardSummary(vendorId: string, period?: string) {
     const LOW_STOCK_THRESHOLD = 5;
+    const placedAtFrom = this.resolvePeriod(period);
+    const dateFilter = placedAtFrom ? { placedAt: { gte: placedAtFrom } } : {};
 
     const [
       orderStats,
@@ -140,7 +173,7 @@ export class VendorsService {
       reviewAgg,
     ] = await Promise.all([
       this.prisma.order.aggregate({
-        where: { vendorId, status: { notIn: ['CANCELLED'] } },
+        where: { vendorId, status: { notIn: ['CANCELLED'] }, ...dateFilter },
         _sum: { totalCents: true },
         _count: { id: true },
       }),
@@ -150,16 +183,16 @@ export class VendorsService {
       }),
       this.prisma.order.groupBy({
         by: ['status'],
-        where: { vendorId },
+        where: { vendorId, ...dateFilter },
         _count: { id: true },
       }),
       this.prisma.order.findMany({
-        where: { vendorId },
+        where: { vendorId, ...dateFilter },
         distinct: ['userId'],
         select: { userId: true },
       }),
       this.prisma.orderItem.aggregate({
-        where: { order: { vendorId, status: { notIn: ['CANCELLED'] } } },
+        where: { order: { vendorId, status: { notIn: ['CANCELLED'] }, ...dateFilter } },
         _sum: { quantity: true },
       }),
       this.prisma.productVariant.count({

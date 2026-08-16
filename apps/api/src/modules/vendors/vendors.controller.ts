@@ -35,10 +35,24 @@ export class VendorsController {
 
   @Roles(Role.VENDOR)
   @Get('me/dashboard')
-  async dashboard(@CurrentUser() user: AuthenticatedUser) {
+  async dashboard(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('period') period?: string,
+  ) {
     const vendor = await this.vendorsService.findByUserId(user.id);
     if (!vendor) throw new ForbiddenException('No vendor account found for this user');
-    return this.vendorsService.getDashboardSummary(vendor.id);
+    return this.vendorsService.getDashboardSummary(vendor.id, period);
+  }
+
+  @Roles(Role.VENDOR)
+  @Get('me/reviews')
+  async reviews(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('page') page?: string,
+  ) {
+    const vendor = await this.vendorsService.findByUserId(user.id);
+    if (!vendor) throw new ForbiddenException('No vendor account found for this user');
+    return this.vendorsService.getReviewsForVendor(vendor.id, page ? parseInt(page, 10) : 1);
   }
 
   @Roles(Role.VENDOR)
