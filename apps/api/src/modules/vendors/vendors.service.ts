@@ -125,7 +125,20 @@ export class VendorsService {
   }
 
   async getDashboardSummary(vendorId: string) {
-    const [orderStats, productCount, pendingProductCount] = await Promise.all([
+    const LOW_STOCK_THRESHOLD = 5;
+
+    const [
+      orderStats,
+      productCount,
+      pendingProductCount,
+      statusGroups,
+      uniqueCustomers,
+      unitsSoldAgg,
+      lowStockCount,
+      outOfStockCount,
+      draftCount,
+      reviewAgg,
+    ] = await Promise.all([
       this.prisma.order.aggregate({
         where: { vendorId, status: { notIn: ['CANCELLED'] } },
         _sum: { totalCents: true },
@@ -135,13 +148,63 @@ export class VendorsService {
       this.prisma.product.count({
         where: { vendorId, deletedAt: null, status: 'PENDING_APPROVAL' },
       }),
+      this.prisma.order.groupBy({
+        by: ['status'],
+        where: { vendorId },
+        _count: { id: true },
+      }),
+      this.prisma.order.findMany({
+        where: { vendorId },
+        distinct: ['userId'],
+        select: { userId: true },
+      }),
+      this.prisma.orderItem.aggregate({
+        where: { order: { vendorId, status: { notIn: ['CANCELLED'] } } },
+        _sum: { quantity: true },
+      }),
+      this.prisma.productVariant.count({
+        where: {
+          stockQuantity: { gt: 0, lt: LOW_STOCK_THRESHOLD },
+          product: { vendorId, deletedAt: null, status: 'PUBLISHED' },
+        },
+      }),
+      this.prisma.productVariant.count({
+        where: {
+          stockQuantity: 0,
+          product: { vendorId, deletedAt: null, status: 'PUBLISHED' },
+        },
+      }),
+      this.prisma.product.count({ where: { vendorId, deletedAt: null, status: 'DRAFT' } }),
+      this.prisma.review.aggregate({
+        where: { product: { vendorId } },
+        _avg: { rating: true },
+        _count: { id: true },
+      }),
     ]);
+
+    const orderPipeline = Object.fromEntries(statusGroups.map((g) => [g.status, g._count.id]));
 
     return {
       totalRevenueCents: orderStats._sum.totalCents ?? 0,
       totalOrders: orderStats._count.id,
       totalProducts: productCount,
       pendingApprovalProducts: pendingProductCount,
+      unitsSold: unitsSoldAgg._sum.quantity ?? 0,
+      uniqueCustomers: uniqueCustomers.length,
+      averageOrderValueCents:
+        orderStats._count.id > 0
+          ? Math.round((orderStats._sum.totalCents ?? 0) / orderStats._count.id)
+          : 0,
+      orderPipeline,
+      inventory: {
+        lowStock: lowStockCount,
+        outOfStock: outOfStockCount,
+        draft: draftCount,
+      },
+      reviews: {
+        averageRating: reviewAgg._avg.rating ?? 0,
+        totalReviews: reviewAgg._count.id,
+      },
     };
   }
 }
