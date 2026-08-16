@@ -1,16 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const { register } = useAuth();
   const router = useRouter();
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' });
+  const searchParams = useSearchParams();
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    referralCode: '',
+  });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) setForm((f) => ({ ...f, referralCode: ref }));
+  }, [searchParams]);
 
   const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -20,7 +32,10 @@ export default function RegisterPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await register(form);
+      await register({
+        ...form,
+        referralCode: form.referralCode.trim() || undefined,
+      });
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -93,6 +108,19 @@ export default function RegisterPage() {
           </p>
         </div>
 
+        <div>
+          <label htmlFor="referralCode" className="mb-1 block text-sm font-medium">
+            Referral code <span className="font-normal text-muted">(optional)</span>
+          </label>
+          <input
+            id="referralCode"
+            value={form.referralCode}
+            onChange={update('referralCode')}
+            placeholder="e.g. SHOPAB12"
+            className="w-full rounded-card border border-line px-4 py-2.5 uppercase focus-visible:outline-2 focus-visible:outline-marigold"
+          />
+        </div>
+
         {error && <p className="text-sm text-chili">{error}</p>}
 
         <button
@@ -111,5 +139,13 @@ export default function RegisterPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
   );
 }

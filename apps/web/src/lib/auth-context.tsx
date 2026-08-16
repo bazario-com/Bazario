@@ -22,6 +22,7 @@ interface AuthContextValue {
     password: string;
     firstName: string;
     lastName: string;
+    referralCode?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
   authFetch: (path: string, init?: RequestInit) => Promise<Response>;
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string;
     firstName: string;
     lastName: string;
+    referralCode?: string;
   }) => {
     const res = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
