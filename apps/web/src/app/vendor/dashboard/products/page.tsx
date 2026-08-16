@@ -43,7 +43,7 @@ export default function VendorProductsPage() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Your Products</h1>
         <Link href="/vendor/dashboard/products/new" className="rounded-card bg-marigold px-5 py-2.5 font-semibold text-ink hover:bg-marigold-600">

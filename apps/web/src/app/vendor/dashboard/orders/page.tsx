@@ -69,7 +69,7 @@ export default function VendorOrdersPage() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div>
       <h1 className="mb-6 text-2xl font-bold">Your Orders</h1>
 
       {orders === null ? (
@@ -122,7 +122,7 @@ export default function VendorOrdersPage() {
                     <button
                       disabled={updating === order.id}
                       onClick={() => handleCreateShipment(order.id)}
-                      className="rounded-card px-3 py-1.5 text-sm font-medium bg-forest text-white hover:bg-forest-700"
+                      className="rounded-card px-3 py-1.5 text-sm font-medium bg-ink-700 text-white hover:bg-ink-900"
                     >
                       Create Shipment
                     </button>
