@@ -1,10 +1,26 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import ExcelJS from 'exceljs';
+import * as argon2 from 'argon2';
+import { randomBytes } from 'crypto';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class AdminUsersService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async resetPassword(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Random, readable temporary password — meets the same complexity rules
+    // enforced at registration (upper/lower/digit/symbol, 12+ chars).
+    const tempPassword = `${randomBytes(6).toString('hex')}Aa1!`;
+    const passwordHash = await argon2.hash(tempPassword, { type: argon2.argon2id });
+
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+
+    return { email: user.email, temporaryPassword: tempPassword };
+  }
 
   findAll(role?: string) {
     return this.prisma.user.findMany({
