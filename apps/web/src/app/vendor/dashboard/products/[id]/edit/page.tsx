@@ -34,7 +34,7 @@ export default function EditVendorProductPage() {
   if (!initialValues) return null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="max-w-2xl">
       <h1 className="mb-6 text-2xl font-bold">Edit Product</h1>
       <VendorProductForm mode="edit" productId={id} initialValues={initialValues} />
     </div>
