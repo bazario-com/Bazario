@@ -16,8 +16,13 @@ import { Public } from '../../common/decorators/public.decorator';
 const REFRESH_COOKIE = 'refresh_token';
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
+  // Frontend (www.shopina.pk) and API (api.shopina.pk) are different
+  // subdomains, so this cookie must survive cross-site fetch() calls —
+  // that requires SameSite=None, which browsers only honor when Secure
+  // is also true. In non-production (same-origin localhost dev), Lax
+  // is fine and Secure would block the cookie over plain HTTP.
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
   path: '/api/v1/auth',
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
@@ -67,7 +72,7 @@ export class AuthController {
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = req.cookies?.[REFRESH_COOKIE];
     if (token) await this.authService.logout(token);
-    res.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' });
+    res.clearCookie(REFRESH_COOKIE, REFRESH_COOKIE_OPTIONS);
     return { success: true };
   }
 }
