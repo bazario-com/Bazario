@@ -131,6 +131,27 @@ export default function AccountDashboardPage() {
         </div>
       </section>
 
+      {(user.role === 'VENDOR' || user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-ink-700 p-5 text-white">
+          <div>
+            <p className="font-display text-lg font-bold">
+              {user.role === 'VENDOR' ? 'Your Seller Dashboard' : 'Admin Control Panel'}
+            </p>
+            <p className="text-sm text-white/70">
+              {user.role === 'VENDOR'
+                ? 'Manage your orders, products, and store from your business dashboard.'
+                : 'Manage vendors, products, users, and platform settings.'}
+            </p>
+          </div>
+          <Link
+            href={user.role === 'VENDOR' ? '/vendor/dashboard' : '/admin'}
+            className="rounded-card bg-marigold px-5 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-marigold-600"
+          >
+            {user.role === 'VENDOR' ? 'Go to Seller Dashboard →' : 'Go to Admin Panel →'}
+          </Link>
+        </section>
+      )}
+
       {/* Quick actions */}
       <section aria-label="Quick actions">
         <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 md:grid-cols-5">
