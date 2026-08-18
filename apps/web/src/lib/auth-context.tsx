@@ -2,7 +2,13 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
+// Deliberately relative, NOT process.env.NEXT_PUBLIC_API_URL — this file is
+// browser-only ('use client'), and routing auth calls through this site's
+// own origin (proxied to the real API via next.config.js rewrites) makes
+// the refresh-token cookie first-party. Browsers increasingly block
+// third-party cookies by default, which broke sessions on reload when this
+// pointed at the cross-subdomain api.shopina.pk URL directly.
+const API_BASE_URL = '/api/v1';
 
 export interface AuthUser {
   id: string;
