@@ -6,6 +6,7 @@ import { CartProvider } from '@/lib/cart-context';
 import { Header } from '@/components/Header';
 import { AnnouncementBar } from '@/components/AnnouncementBar';
 import { Footer } from '@/components/Footer';
+import { AuthDebugBanner } from '@/components/AuthDebugBanner';
 import { api } from '@/lib/api';
 
 const sora = Sora({ subsets: ['latin'], variable: '--font-sora', weight: ['600', '700', '800'] });
@@ -43,6 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AuthProvider>
           <CartProvider>
             <AnnouncementBar />
+            <AuthDebugBanner />
             <Header categories={categories} />
             <main>{children}</main>
             <Footer />

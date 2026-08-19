@@ -56,10 +56,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         credentials: 'include',
       });
+      const bodyText = await res.text();
+      // TEMPORARY DEBUG — remove once session-persistence bug is diagnosed
+      (window as any).__authDebug = {
+        status: res.status,
+        ok: res.ok,
+        body: bodyText,
+        cookiesVisible: document.cookie,
+        time: new Date().toISOString(),
+      };
       if (!res.ok) throw new Error('no session');
-      const data = await res.json();
+      const data = JSON.parse(bodyText);
       applyAuthResult(data);
-    } catch {
+    } catch (err) {
+      (window as any).__authDebug = {
+        ...(window as any).__authDebug,
+        caughtError: err instanceof Error ? err.message : String(err),
+      };
       setAccessToken(null);
       setUser(null);
     } finally {
