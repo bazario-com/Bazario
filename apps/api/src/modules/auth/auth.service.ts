@@ -100,7 +100,12 @@ export class AuthService {
       data: { revokedAt: new Date() },
     });
 
-    return this.issueTokenPair(user.id, user.email, user.role);
+    const tokens = await this.issueTokenPair(user.id, user.email, user.role);
+    // Bug fix: this previously omitted `user`, which the frontend needs
+    // alongside the token to know who's logged in — a valid access token
+    // alone let authenticated API calls succeed, but left the UI showing
+    // "Log in" since it never learned who the refreshed session belongs to.
+    return { user: this.usersService.toSafeUser(user), ...tokens };
   }
 
   async logout(rawRefreshToken: string) {
