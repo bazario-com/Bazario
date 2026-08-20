@@ -3,6 +3,7 @@ import { Role } from '@prisma/client';
 import { VendorsService } from './vendors.service';
 import { RegisterVendorDto } from './dto/register-vendor.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
+import { SubmitChangeRequestDto } from './dto/submit-change-request.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
@@ -53,6 +54,25 @@ export class VendorsController {
     const vendor = await this.vendorsService.findByUserId(user.id);
     if (!vendor) throw new ForbiddenException('No vendor account found for this user');
     return this.vendorsService.getReviewsForVendor(vendor.id, page ? parseInt(page, 10) : 1);
+  }
+
+  @Roles(Role.VENDOR)
+  @Post('me/change-request')
+  async submitChangeRequest(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: SubmitChangeRequestDto,
+  ) {
+    const vendor = await this.vendorsService.findByUserId(user.id);
+    if (!vendor) throw new ForbiddenException('No vendor account found for this user');
+    return this.vendorsService.submitInfoChangeRequest(vendor.id, dto.message);
+  }
+
+  @Roles(Role.VENDOR)
+  @Get('me/change-requests')
+  async myChangeRequests(@CurrentUser() user: AuthenticatedUser) {
+    const vendor = await this.vendorsService.findByUserId(user.id);
+    if (!vendor) throw new ForbiddenException('No vendor account found for this user');
+    return this.vendorsService.listMyInfoChangeRequests(vendor.id);
   }
 
   @Roles(Role.VENDOR)

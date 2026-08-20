@@ -210,6 +210,7 @@ model Vendor {
   products Product[]
   coupons  Coupon[]
   orders   Order[]
+  infoChangeRequests VendorInfoChangeRequest[]
 
   @@index([status])
   @@map("vendors")
@@ -727,4 +728,23 @@ model Referral {
 
   @@index([referrerUserId])
   @@map("referrals")
+}
+
+enum ChangeRequestStatus {
+  PENDING
+  RESOLVED
+}
+
+model VendorInfoChangeRequest {
+  id         String              @id @default(uuid())
+  vendor     Vendor              @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  vendorId   String
+  message    String
+  status     ChangeRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
+  resolvedAt DateTime?
+
+  @@index([vendorId])
+  @@index([status])
+  @@map("vendor_info_change_requests")
 }

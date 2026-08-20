@@ -155,6 +155,21 @@ export class VendorsService {
     return { reviews, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
   }
 
+  // Vendors cannot self-edit businessName/businessRegNumber/taxId once
+  // registered — those go through admin review instead of a direct PATCH.
+  submitInfoChangeRequest(vendorId: string, message: string) {
+    return this.prisma.vendorInfoChangeRequest.create({
+      data: { vendorId, message },
+    });
+  }
+
+  listMyInfoChangeRequests(vendorId: string) {
+    return this.prisma.vendorInfoChangeRequest.findMany({
+      where: { vendorId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async getDashboardSummary(vendorId: string, period?: string) {
     const LOW_STOCK_THRESHOLD = 5;
     const placedAtFrom = this.resolvePeriod(period);
