@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 
 interface AdminVendor {
@@ -69,7 +70,12 @@ export default function AdminVendorsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="mb-4 text-2xl font-bold">Vendor Approvals</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Vendor Approvals</h1>
+        <Link href="/admin/vendors/change-requests" className="text-sm font-semibold text-marigold-600">
+          Info Change Requests →
+        </Link>
+      </div>
 
       <div className="mb-6 flex gap-2">
         {TABS.map((t) => (
