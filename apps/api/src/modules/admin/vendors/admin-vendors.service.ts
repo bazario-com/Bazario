@@ -1,11 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { AuditLogService } from '../rbac/audit-log.service';
 
 const VALID_STATUSES = ['PENDING', 'APPROVED', 'SUSPENDED', 'REJECTED'];
 
 @Injectable()
 export class AdminVendorsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditLog: AuditLogService,
+  ) {}
 
   findAll(status?: string) {
     if (status && !VALID_STATUSES.includes(status)) {
@@ -18,27 +22,39 @@ export class AdminVendorsService {
     });
   }
 
-  async approve(vendorId: string) {
+  async approve(vendorId: string, actorId: string) {
     const vendor = await this.prisma.vendor.findUnique({ where: { id: vendorId } });
     if (!vendor) throw new NotFoundException('Vendor not found');
     if (vendor.status === 'APPROVED') {
       throw new BadRequestException('Vendor is already approved');
     }
 
-    return this.prisma.vendor.update({
+    const updated = await this.prisma.vendor.update({
       where: { id: vendorId },
       data: { status: 'APPROVED', approvedAt: new Date(), rejectedReason: null },
     });
+    await this.auditLog.log(actorId, 'APPROVE_VENDOR', {
+      targetType: 'Vendor',
+      targetId: vendorId,
+      details: { businessName: vendor.businessName },
+    });
+    return updated;
   }
 
-  async reject(vendorId: string, reason: string) {
+  async reject(vendorId: string, reason: string, actorId: string) {
     const vendor = await this.prisma.vendor.findUnique({ where: { id: vendorId } });
     if (!vendor) throw new NotFoundException('Vendor not found');
 
-    return this.prisma.vendor.update({
+    const updated = await this.prisma.vendor.update({
       where: { id: vendorId },
       data: { status: 'REJECTED', rejectedReason: reason },
     });
+    await this.auditLog.log(actorId, 'REJECT_VENDOR', {
+      targetType: 'Vendor',
+      targetId: vendorId,
+      details: { businessName: vendor.businessName, reason },
+    });
+    return updated;
   }
 
   async setCommission(vendorId: string, commissionRateBps: number) {

@@ -5,6 +5,7 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { RequirePermission } from '../../common/decorators/require-permission.decorator';
 
 @Controller('categories')
 export class CategoriesController {
@@ -25,18 +26,21 @@ export class CategoriesController {
   }
 
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermission('MANAGE_CATEGORIES')
   @Post()
   create(@Body() dto: CreateCategoryDto) {
     return this.categoriesService.create(dto);
   }
 
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermission('MANAGE_CATEGORIES')
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
     return this.categoriesService.update(id, dto);
   }
 
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermission('MANAGE_CATEGORIES')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.categoriesService.remove(id);

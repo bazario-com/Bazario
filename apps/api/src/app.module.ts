@@ -22,6 +22,8 @@ import { NewsletterModule } from './modules/newsletter/newsletter.module';
 import { StoreFollowsModule } from './modules/store-follows/store-follows.module';
 import { RewardsModule } from './modules/rewards/rewards.module';
 import { ReferralsModule } from './modules/referrals/referrals.module';
+import { AdminRolesModule } from './modules/admin/roles/admin-roles.module';
+import { AdminManagementModule } from './modules/admin/management/admin-management.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -58,6 +60,8 @@ import appConfig from './config/app.config';
     StoreFollowsModule,
     RewardsModule,
     ReferralsModule,
+    AdminRolesModule,
+    AdminManagementModule,
   ],
   providers: [
     // Without this, @Throttle() on individual routes (e.g. auth login/register)

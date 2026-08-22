@@ -12,6 +12,7 @@ import { CreateConversationDto } from './dto/create-conversation.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { RequirePermission } from '../../common/decorators/require-permission.decorator';
 import { Role } from '@prisma/client';
 
 @Controller('conversations')
@@ -54,6 +55,7 @@ export class MessagingController {
 }
 
 @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+@RequirePermission('MANAGE_SUPPORT_CONVERSATIONS')
 @Controller('admin/conversations')
 export class AdminMessagingController {
   constructor(private readonly messagingService: MessagingService) {}

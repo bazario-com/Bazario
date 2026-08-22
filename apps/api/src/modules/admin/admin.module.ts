@@ -10,8 +10,10 @@ import { AdminDashboardController } from './dashboard/admin-dashboard.controller
 import { AdminAnnouncementsService } from './announcements/admin-announcements.service';
 import { AdminAnnouncementsController } from './announcements/admin-announcements.controller';
 import { AnnouncementsPublicController } from './announcements/announcements-public.controller';
+import { RbacModule } from './rbac/rbac.module';
 
 @Module({
+  imports: [RbacModule],
   controllers: [
     AdminVendorsController,
     AdminProductsController,

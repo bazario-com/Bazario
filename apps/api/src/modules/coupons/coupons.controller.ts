@@ -4,6 +4,7 @@ import { CouponsService } from './coupons.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { VendorsService } from '../vendors/vendors.service';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { RequirePermission } from '../../common/decorators/require-permission.decorator';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('coupons')
@@ -33,6 +34,7 @@ export class CouponsController {
 
   // Platform-wide coupons (vendorId = null) — admin only.
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermission('MANAGE_PLATFORM_COUPONS')
   @Post('platform')
   createPlatformCoupon(@Body() dto: CreateCouponDto) {
     return this.couponsService.create(null, dto);

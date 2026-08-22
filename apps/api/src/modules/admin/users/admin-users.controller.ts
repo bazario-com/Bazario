@@ -4,6 +4,7 @@ import { Role } from '@prisma/client';
 import { AdminUsersService } from './admin-users.service';
 import { SetActiveDto } from './dto/set-active.dto';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { RequirePermission } from '../../../common/decorators/require-permission.decorator';
 import { CurrentUser, AuthenticatedUser } from '../../../common/decorators/current-user.decorator';
 
 @Roles(Role.ADMIN, Role.SUPER_ADMIN)
@@ -11,11 +12,13 @@ import { CurrentUser, AuthenticatedUser } from '../../../common/decorators/curre
 export class AdminUsersController {
   constructor(private readonly adminUsersService: AdminUsersService) {}
 
+  @RequirePermission('VIEW_USERS')
   @Get()
   findAll(@Query('role') role?: string) {
     return this.adminUsersService.findAll(role);
   }
 
+  @RequirePermission('EXPORT_USERS')
   @Get('export')
   async exportToExcel(@Res() res: Response) {
     const buffer = await this.adminUsersService.exportToExcel();
@@ -26,6 +29,7 @@ export class AdminUsersController {
     res.send(buffer);
   }
 
+  @RequirePermission('MANAGE_USER_STATUS')
   @Patch(':id/active')
   setActive(
     @CurrentUser() admin: AuthenticatedUser,
@@ -37,8 +41,9 @@ export class AdminUsersController {
 
   // Admin-initiated reset: generates a fresh temporary password and returns
   // it once — it is never stored or logged in plaintext beyond this response.
+  @RequirePermission('RESET_USER_PASSWORD')
   @Patch(':id/reset-password')
-  resetPassword(@Param('id') id: string) {
-    return this.adminUsersService.resetPassword(id);
+  resetPassword(@CurrentUser() admin: AuthenticatedUser, @Param('id') id: string) {
+    return this.adminUsersService.resetPassword(id, admin.id);
   }
 }

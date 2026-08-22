@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AdminUsersService } from './admin-users.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { AuditLogService } from '../rbac/audit-log.service';
 
 describe('AdminUsersService', () => {
   let service: AdminUsersService;
@@ -13,7 +14,11 @@ describe('AdminUsersService', () => {
       refreshToken: { updateMany: jest.fn() },
     };
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AdminUsersService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        AdminUsersService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: AuditLogService, useValue: { log: jest.fn() } },
+      ],
     }).compile();
     service = module.get(AdminUsersService);
   });

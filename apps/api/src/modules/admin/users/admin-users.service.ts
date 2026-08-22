@@ -3,12 +3,16 @@ import ExcelJS from 'exceljs';
 import * as argon2 from 'argon2';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { AuditLogService } from '../rbac/audit-log.service';
 
 @Injectable()
 export class AdminUsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditLog: AuditLogService,
+  ) {}
 
-  async resetPassword(userId: string) {
+  async resetPassword(userId: string, actorId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -18,6 +22,11 @@ export class AdminUsersService {
     const passwordHash = await argon2.hash(tempPassword, { type: argon2.argon2id });
 
     await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+    await this.auditLog.log(actorId, 'RESET_USER_PASSWORD', {
+      targetType: 'User',
+      targetId: userId,
+      details: { email: user.email },
+    });
 
     return { email: user.email, temporaryPassword: tempPassword };
   }
@@ -70,6 +79,12 @@ export class AdminUsersService {
         data: { revokedAt: new Date() },
       });
     }
+
+    await this.auditLog.log(actingAdminId, isActive ? 'REACTIVATE_USER' : 'DEACTIVATE_USER', {
+      targetType: 'User',
+      targetId: targetUserId,
+      details: { email: target.email },
+    });
 
     return updated;
   }
