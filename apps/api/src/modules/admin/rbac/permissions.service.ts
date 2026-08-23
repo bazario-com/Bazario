@@ -44,4 +44,30 @@ export class PermissionsService {
     const effective = await this.getEffectivePermissions(userId, role);
     return effective === FULL_ACCESS || effective.has(permission);
   }
+
+  // Lets the frontend render a personalized experience — every admin can
+  // see their own access, distinct from the MANAGE_ADMIN_USERS-gated view
+  // of *other* people's access.
+  async getMyAccess(userId: string, role: string) {
+    if (role === 'SUPER_ADMIN') {
+      return { isFullAccess: true, roleName: 'Super Admin', permissions: [] };
+    }
+
+    const assignment = await this.prisma.adminRoleAssignment.findUnique({
+      where: { userId },
+      include: { role: { include: { permissions: true } } },
+    });
+
+    if (!assignment) {
+      return { isFullAccess: true, roleName: 'Admin (unrestricted)', permissions: [] };
+    }
+
+    const effective = await this.getEffectivePermissions(userId, role);
+    return {
+      isFullAccess: false,
+      roleName: assignment.role.name,
+      roleDescription: assignment.role.description,
+      permissions: effective === FULL_ACCESS ? [] : Array.from(effective),
+    };
+  }
 }
