@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { formatPriceCents } from '@/lib/api';
+import { ManagementCenter } from '@/components/ManagementCenter';
 
 interface AdminSummary {
   totalUsers: number;
@@ -15,13 +16,36 @@ interface AdminSummary {
   totalRevenueCents: number;
 }
 
+interface Access {
+  isFullAccess: boolean;
+  roleName: string;
+  roleDescription?: string | null;
+  permissions: string[];
+}
+
 export default function AdminDashboardPage() {
   const { user, authFetch, loading: authLoading } = useAuth();
+  const [access, setAccess] = useState<Access | null>(null);
   const [summary, setSummary] = useState<AdminSummary | null>(null);
   const [forbidden, setForbidden] = useState(false);
 
   useEffect(() => {
     if (!user) return;
+    authFetch('/admin/me/access')
+      .then((res) => {
+        if (res.status === 403) {
+          setForbidden(true);
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data) setAccess(data);
+      });
+  }, [user, authFetch]);
+
+  useEffect(() => {
+    if (!user || !access?.isFullAccess) return;
     authFetch('/admin/dashboard/summary').then(async (res) => {
       if (res.status === 403) {
         setForbidden(true);
@@ -29,10 +53,11 @@ export default function AdminDashboardPage() {
       }
       setSummary(await res.json());
     });
-  }, [user, authFetch]);
+  }, [user, access, authFetch]);
 
   if (authLoading) return null;
   if (!user) return null;
+
   if (forbidden) {
     return (
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
@@ -40,6 +65,15 @@ export default function AdminDashboardPage() {
       </div>
     );
   }
+
+  if (!access) return null;
+
+  // Scoped management account — personalized, permission-driven view.
+  if (!access.isFullAccess) {
+    return <ManagementCenter access={access} />;
+  }
+
+  // Super Admin / legacy full-access admin — the full command center.
   if (!summary) return null;
 
   return (
@@ -80,14 +114,30 @@ export default function AdminDashboardPage() {
           <p className="font-semibold">🗂️ Categories</p>
           <p className="text-sm text-muted">Manage the storefront category tree</p>
         </Link>
-          <Link href="/admin/announcements" className="rounded-card bg-surface p-5 shadow-card hover:shadow-cardHover">
-            <p className="font-semibold">📣 Announcements</p>
-            <p className="text-sm text-muted">Post site-wide banners and promos</p>
-          </Link>
-          <Link href="/admin/messages" className="rounded-card bg-surface p-5 shadow-card hover:shadow-cardHover">
-            <p className="font-semibold">💬 Messages</p>
-            <p className="text-sm text-muted">Vendor & customer conversations</p>
-          </Link>
+        <Link href="/admin/announcements" className="rounded-card bg-surface p-5 shadow-card hover:shadow-cardHover">
+          <p className="font-semibold">📣 Announcements</p>
+          <p className="text-sm text-muted">Post site-wide banners and promos</p>
+        </Link>
+        <Link href="/admin/messages" className="rounded-card bg-surface p-5 shadow-card hover:shadow-cardHover">
+          <p className="font-semibold">💬 Messages</p>
+          <p className="text-sm text-muted">Vendor & customer conversations</p>
+        </Link>
+      </div>
+
+      <h2 className="mb-3 mt-8 text-lg font-bold text-ink-700">Team &amp; Governance</h2>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Link href="/admin/management" className="rounded-card bg-surface p-5 shadow-card hover:shadow-cardHover">
+          <p className="font-semibold">🧑‍💼 Management Team</p>
+          <p className="text-sm text-muted">Create accounts and assign duties</p>
+        </Link>
+        <Link href="/admin/roles" className="rounded-card bg-surface p-5 shadow-card hover:shadow-cardHover">
+          <p className="font-semibold">🔐 Roles &amp; Permissions</p>
+          <p className="text-sm text-muted">Define what each role can access</p>
+        </Link>
+        <Link href="/admin/audit-log" className="rounded-card bg-surface p-5 shadow-card hover:shadow-cardHover">
+          <p className="font-semibold">📜 Audit Log</p>
+          <p className="text-sm text-muted">Review sensitive admin actions</p>
+        </Link>
       </div>
     </div>
   );
