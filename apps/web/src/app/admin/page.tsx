@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { formatPriceCents } from '@/lib/api';
 import { ManagementCenter } from '@/components/ManagementCenter';
+import { useAdminAccess } from '@/lib/admin-access-context';
 
 interface AdminSummary {
   totalUsers: number;
@@ -16,61 +17,17 @@ interface AdminSummary {
   totalRevenueCents: number;
 }
 
-interface Access {
-  isFullAccess: boolean;
-  roleName: string;
-  roleDescription?: string | null;
-  permissions: string[];
-}
-
 export default function AdminDashboardPage() {
-  const { user, authFetch, loading: authLoading } = useAuth();
-  const [access, setAccess] = useState<Access | null>(null);
+  const { user, authFetch } = useAuth();
+  const access = useAdminAccess();
   const [summary, setSummary] = useState<AdminSummary | null>(null);
-  const [forbidden, setForbidden] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    authFetch('/admin/me/access')
-      .then((res) => {
-        if (res.status === 403) {
-          setForbidden(true);
-          return null;
-        }
-        if (!res.ok) {
-          throw new Error(`access fetch failed: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data) setAccess(data);
-      })
-      .catch(() => setForbidden(true));
-  }, [user, authFetch]);
-
-  useEffect(() => {
-    if (!user || !access?.isFullAccess) return;
+    if (!user || !access.isFullAccess) return;
     authFetch('/admin/dashboard/summary').then(async (res) => {
-      if (res.status === 403) {
-        setForbidden(true);
-        return;
-      }
-      setSummary(await res.json());
+      if (res.ok) setSummary(await res.json());
     });
   }, [user, access, authFetch]);
-
-  if (authLoading) return null;
-  if (!user) return null;
-
-  if (forbidden) {
-    return (
-      <div className="mx-auto max-w-xl px-4 py-16 text-center">
-        <h1 className="text-xl font-bold">Admin access required</h1>
-      </div>
-    );
-  }
-
-  if (!access) return null;
 
   // Scoped management account — personalized, permission-driven view.
   if (!access.isFullAccess) {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { AdminShell } from '@/components/admin/AdminShell';
+import { AdminAccessProvider } from '@/lib/admin-access-context';
 
 interface Access {
   isFullAccess: boolean;
@@ -49,8 +50,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!access) return null;
 
   return (
-    <AdminShell access={access} user={user}>
-      {children}
-    </AdminShell>
+    <AdminAccessProvider value={access}>
+      <AdminShell access={access} user={user}>
+        {children}
+      </AdminShell>
+    </AdminAccessProvider>
   );
 }
