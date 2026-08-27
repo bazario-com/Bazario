@@ -22,7 +22,7 @@ function Skeleton({ className }: { className: string }) {
 
 export function ManagementCenter({ access }: { access: Access }) {
   const { user, authFetch } = useAuth();
-  const has = (p: string) => access.permissions.includes(p);
+  const has = (p: string) => access.permissions?.includes(p) ?? false;
 
   const [pendingVendors, setPendingVendors] = useState<number | null>(null);
   const [pendingChangeRequests, setPendingChangeRequests] = useState<number | null>(null);

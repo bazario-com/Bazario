@@ -37,11 +37,15 @@ export default function AdminDashboardPage() {
           setForbidden(true);
           return null;
         }
+        if (!res.ok) {
+          throw new Error(`access fetch failed: ${res.status}`);
+        }
         return res.json();
       })
       .then((data) => {
         if (data) setAccess(data);
-      });
+      })
+      .catch(() => setForbidden(true));
   }, [user, authFetch]);
 
   useEffect(() => {
