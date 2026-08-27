@@ -132,7 +132,7 @@ export function AdminShell({
       )}
 
       {/* Main column */}
-      <div className={`flex min-h-screen flex-col transition-all md:${collapsed ? 'pl-16' : 'pl-60'}`}>
+      <div className={`flex min-h-screen flex-col transition-all ${collapsed ? 'md:pl-16' : 'md:pl-60'}`}>
         {/* Header */}
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-surface px-4 py-3">
           <button
