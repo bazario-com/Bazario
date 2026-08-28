@@ -1,11 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { AuditLogService } from '../rbac/audit-log.service';
 
 const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REJECTED', 'ARCHIVED'];
 
 @Injectable()
 export class AdminProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditLog: AuditLogService,
+  ) {}
 
   findAll(status?: string) {
     if (status && !VALID_STATUSES.includes(status)) {
@@ -24,26 +28,38 @@ export class AdminProductsService {
     });
   }
 
-  async approve(productId: string) {
+  async approve(productId: string, actorId: string) {
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
     if (!product) throw new NotFoundException('Product not found');
     if (product.status === 'PUBLISHED') {
       throw new BadRequestException('Product is already published');
     }
 
-    return this.prisma.product.update({
+    const updated = await this.prisma.product.update({
       where: { id: productId },
       data: { status: 'PUBLISHED', publishedAt: new Date(), rejectedReason: null },
     });
+    await this.auditLog.log(actorId, 'APPROVE_PRODUCT', {
+      targetType: 'Product',
+      targetId: productId,
+      details: { title: product.title },
+    });
+    return updated;
   }
 
-  async reject(productId: string, reason: string) {
+  async reject(productId: string, reason: string, actorId: string) {
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
     if (!product) throw new NotFoundException('Product not found');
 
-    return this.prisma.product.update({
+    const updated = await this.prisma.product.update({
       where: { id: productId },
       data: { status: 'REJECTED', rejectedReason: reason },
     });
+    await this.auditLog.log(actorId, 'REJECT_PRODUCT', {
+      targetType: 'Product',
+      targetId: productId,
+      details: { title: product.title, reason },
+    });
+    return updated;
   }
 }

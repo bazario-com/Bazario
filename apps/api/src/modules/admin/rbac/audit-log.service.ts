@@ -27,4 +27,14 @@ export class AuditLogService {
       include: { actor: { select: { firstName: true, lastName: true, email: true } } },
     });
   }
+
+  // Scoped version of list() for the "own activity" endpoint — no actor
+  // include needed since the caller already knows who they are.
+  listForActor(actorId: string, limit = 10) {
+    return this.prisma.adminAuditLog.findMany({
+      where: { actorId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
 }
