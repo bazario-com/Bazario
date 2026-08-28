@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import { RecentActivity } from '@/components/admin/RecentActivity';
 
 interface Access {
   roleName: string;
@@ -175,6 +176,10 @@ export function ManagementCenter({ access }: { access: Access }) {
           </ul>
         )}
       </section>
+
+      <div className="mb-8">
+        <RecentActivity />
+      </div>
 
       {quickActions.length > 0 && (
         <section>
