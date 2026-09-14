@@ -3,6 +3,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { AuditLogService } from '../rbac/audit-log.service';
 
 const VALID_STATUSES = ['PENDING', 'APPROVED', 'SUSPENDED', 'REJECTED'];
+const SORTABLE_FIELDS = ['createdAt', 'businessName', 'commissionRateBps'];
 
 @Injectable()
 export class AdminVendorsService {
@@ -11,15 +12,23 @@ export class AdminVendorsService {
     private readonly auditLog: AuditLogService,
   ) {}
 
-  findAll(status?: string) {
+  async findAll(status?: string, page = 1, pageSize = 20, sortBy?: string, sortDir: 'asc' | 'desc' = 'desc') {
     if (status && !VALID_STATUSES.includes(status)) {
       throw new BadRequestException(`status must be one of: ${VALID_STATUSES.join(', ')}`);
     }
-    return this.prisma.vendor.findMany({
-      where: status ? { status: status as any } : undefined,
-      orderBy: { createdAt: 'desc' },
-      include: { store: true, user: { select: { firstName: true, lastName: true, email: true } } },
-    });
+    const orderField = sortBy && SORTABLE_FIELDS.includes(sortBy) ? sortBy : 'createdAt';
+    const where = status ? { status: status as any } : undefined;
+    const [vendors, total] = await Promise.all([
+      this.prisma.vendor.findMany({
+        where,
+        orderBy: { [orderField]: sortDir },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: { store: true, user: { select: { firstName: true, lastName: true, email: true } } },
+      }),
+      this.prisma.vendor.count({ where }),
+    ]);
+    return { vendors, total, page, pageSize };
   }
 
   async approve(vendorId: string, actorId: string) {
