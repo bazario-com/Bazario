@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { AdminDataTable, type Column } from '@/components/admin/AdminDataTable';
+import { describeAction, actionSubtitle } from '@/lib/admin-actions';
+import { relativeTime } from '@/lib/format-time';
 
 interface AuditEntry {
   id: string;
@@ -13,31 +16,19 @@ interface AuditEntry {
   actor: { firstName: string; lastName: string; email: string };
 }
 
-const ACTION_LABELS: Record<string, string> = {
-  APPROVE_VENDOR: 'Approved vendor',
-  REJECT_VENDOR: 'Rejected vendor',
-  RESET_USER_PASSWORD: "Reset a user's password",
-  REACTIVATE_USER: 'Reactivated a user',
-  DEACTIVATE_USER: 'Deactivated a user',
-  CREATE_MANAGEMENT_USER: 'Created a management account',
-  REASSIGN_ROLE: "Reassigned a team member's role",
-  SET_PERMISSION_OVERRIDE: 'Set a permission override',
-  REACTIVATE_MANAGEMENT_USER: 'Reactivated a management account',
-  SUSPEND_MANAGEMENT_USER: 'Suspended a management account',
-};
-
-function Skeleton({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-card bg-line ${className}`} />;
-}
+const PAGE_SIZE = 30;
 
 export default function AdminAuditLogPage() {
   const { authFetch, loading: authLoading } = useAuth();
-  const [entries, setEntries] = useState<AuditEntry[] | null>(null);
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
+  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [forbidden, setForbidden] = useState(false);
 
   const load = useCallback(() => {
+    setLoading(true);
     setError(false);
     setForbidden(false);
     authFetch(`/admin/audit-log?page=${page}`)
@@ -50,9 +41,13 @@ export default function AdminAuditLogPage() {
         return res.json();
       })
       .then((data) => {
-        if (data) setEntries(data);
+        if (data) {
+          setEntries(data.entries);
+          setTotal(data.total);
+        }
       })
-      .catch(() => setError(true));
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, [authFetch, page]);
 
   useEffect(() => {
@@ -69,62 +64,109 @@ export default function AdminAuditLogPage() {
     );
   }
 
+  const columns: Column<AuditEntry>[] = [
+    {
+      key: 'actor',
+      header: 'Who',
+      render: (entry) => (
+        <span className="font-semibold">
+          {entry.actor.firstName} {entry.actor.lastName}
+        </span>
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      render: (entry) => {
+        const { label, icon } = describeAction(entry.action);
+        const sub = actionSubtitle(entry.details);
+        return (
+          <span>
+            <span aria-hidden>{icon}</span> {label}
+            {sub && <span className="text-muted"> {'\u2014'} {sub}</span>}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'createdAt',
+      header: 'When',
+      render: (entry) => <span className="whitespace-nowrap text-muted">{relativeTime(entry.createdAt)}</span>,
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="mb-1 text-2xl font-bold">Audit Log</h1>
       <p className="mb-6 text-sm text-muted">A record of sensitive administrative actions.</p>
 
-      {error ? (
-        <div className="rounded-card bg-chili-50 p-4 text-center text-sm text-chili-600">
-          <p className="mb-2">Unable to load the audit log.</p>
-          <button onClick={load} className="rounded-card border border-chili px-4 py-1.5 font-semibold hover:bg-chili hover:text-white">
-            Try Again
-          </button>
-        </div>
-      ) : entries === null ? (
-        <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
-      ) : entries.length === 0 ? (
-        <p className="rounded-card bg-surface p-8 text-center text-sm text-muted shadow-card">
-          No administrative actions recorded yet.
-        </p>
-      ) : (
-        <>
-          <ul className="space-y-2">
-            {entries.map((entry) => (
-              <li key={entry.id} className="rounded-card bg-surface p-4 shadow-card">
-                <p className="text-sm">
-                  <span className="font-semibold">{entry.actor.firstName} {entry.actor.lastName}</span>{' '}
-                  <span className="text-ink-400">{ACTION_LABELS[entry.action] ?? entry.action}</span>
-                </p>
-                {entry.details && Object.keys(entry.details).length > 0 && (
-                  <p className="mt-1 text-xs text-muted">
-                    {Object.entries(entry.details).map(([k, v]) => `${k}: ${v}`).join(' · ')}
-                  </p>
+      <AdminDataTable
+        columns={columns}
+        rows={entries}
+        getRowId={(entry) => entry.id}
+        loading={loading}
+        error={error}
+        onRetry={load}
+        emptyMessage="No administrative actions recorded yet."
+        page={page}
+        pageSize={PAGE_SIZE}
+        total={total}
+        onPageChange={setPage}
+        renderDrawer={(entry, onClose) => (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center"
+            onClick={onClose}
+          >
+            <div
+              className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-t-card bg-surface p-6 shadow-card sm:rounded-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <h2 className="text-lg font-bold">Action Details</h2>
+                <button onClick={onClose} className="text-muted hover:text-ink-900">
+                  Close
+                </button>
+              </div>
+              <dl className="space-y-3 text-sm">
+                <div>
+                  <dt className="text-muted">Actor</dt>
+                  <dd>
+                    {entry.actor.firstName} {entry.actor.lastName} ({entry.actor.email})
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted">Action</dt>
+                  <dd>{describeAction(entry.action).label}</dd>
+                </div>
+                {entry.targetType && (
+                  <div>
+                    <dt className="text-muted">Target</dt>
+                    <dd>
+                      {entry.targetType} {entry.targetId ? `(${entry.targetId})` : ''}
+                    </dd>
+                  </div>
                 )}
-                <p className="mt-1 text-xs text-muted">{new Date(entry.createdAt).toLocaleString()}</p>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-4 flex items-center justify-between text-sm">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="rounded-card border border-line px-3 py-1.5 disabled:opacity-40"
-            >
-              Previous
-            </button>
-            <span className="text-muted">Page {page}</span>
-            <button
-              disabled={entries.length < 30}
-              onClick={() => setPage((p) => p + 1)}
-              className="rounded-card border border-line px-3 py-1.5 disabled:opacity-40"
-            >
-              Next
-            </button>
+                {entry.details && Object.keys(entry.details).length > 0 && (
+                  <div>
+                    <dt className="text-muted">Details</dt>
+                    <dd className="space-y-1">
+                      {Object.entries(entry.details).map(([k, v]) => (
+                        <div key={k}>
+                          <span className="font-semibold">{k}:</span> {String(v)}
+                        </div>
+                      ))}
+                    </dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-muted">Time</dt>
+                  <dd>{new Date(entry.createdAt).toLocaleString()}</dd>
+                </div>
+              </dl>
+            </div>
           </div>
-        </>
-      )}
+        )}
+      />
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { describeAction, actionSubtitle } from '@/lib/admin-actions';
+import { relativeTime } from '@/lib/format-time';
 
 interface ActivityEntry {
   id: string;
@@ -10,47 +12,6 @@ interface ActivityEntry {
   targetId?: string | null;
   details?: Record<string, unknown> | null;
   createdAt: string;
-}
-
-const ACTION_LABELS: Record<string, { label: string; icon: string }> = {
-  APPROVE_VENDOR: { label: 'Approved a vendor', icon: '\u2705' },
-  REJECT_VENDOR: { label: 'Rejected a vendor', icon: '\u274c' },
-  APPROVE_PRODUCT: { label: 'Approved a product', icon: '\u2705' },
-  REJECT_PRODUCT: { label: 'Rejected a product', icon: '\u274c' },
-  RESET_USER_PASSWORD: { label: 'Reset a user password', icon: '\ud83d\udd11' },
-  REACTIVATE_USER: { label: 'Reactivated a user', icon: '\ud83d\udfe2' },
-  DEACTIVATE_USER: { label: 'Deactivated a user', icon: '\ud83d\udd34' },
-  CREATE_MANAGEMENT_USER: { label: 'Created a management account', icon: '\ud83e\uddd1\u200d\ud83d\udcbc' },
-  REASSIGN_ROLE: { label: 'Reassigned a role', icon: '\ud83d\udd04' },
-  SET_PERMISSION_OVERRIDE: { label: 'Updated a permission override', icon: '\ud83d\udd10' },
-  REACTIVATE_MANAGEMENT_USER: { label: 'Reactivated a management account', icon: '\ud83d\udfe2' },
-  SUSPEND_MANAGEMENT_USER: { label: 'Suspended a management account', icon: '\u23f8\ufe0f' },
-};
-
-function describe(entry: ActivityEntry): { label: string; icon: string } {
-  return (
-    ACTION_LABELS[entry.action] ?? {
-      label: entry.action.replace(/_/g, ' ').toLowerCase().replace(/^./, (c) => c.toUpperCase()),
-      icon: '\ud83d\udd39',
-    }
-  );
-}
-
-function subtitle(entry: ActivityEntry): string | null {
-  const d = entry.details ?? {};
-  const name = (d.businessName ?? d.title ?? d.email ?? d.roleName) as string | undefined;
-  return name ?? null;
-}
-
-function relativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
 }
 
 function Skeleton({ className }: { className: string }) {
@@ -78,8 +39,8 @@ export function RecentActivity() {
       ) : (
         <ul className="space-y-1.5">
           {entries.map((entry) => {
-            const { label, icon } = describe(entry);
-            const sub = subtitle(entry);
+            const { label, icon } = describeAction(entry.action);
+            const sub = actionSubtitle(entry.details);
             return (
               <li key={entry.id} className="flex items-center justify-between rounded-card bg-surface px-4 py-2.5 shadow-card">
                 <span className="text-sm">
