@@ -3,6 +3,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { AuditLogService } from '../rbac/audit-log.service';
 
 const VALID_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'REJECTED', 'ARCHIVED'];
+const SORTABLE_FIELDS = ['createdAt', 'title', 'basePriceCents'];
 
 @Injectable()
 export class AdminProductsService {
@@ -11,21 +12,32 @@ export class AdminProductsService {
     private readonly auditLog: AuditLogService,
   ) {}
 
-  findAll(status?: string) {
+  async findAll(status?: string, page = 1, pageSize = 20, sortBy?: string, sortDir: 'asc' | 'desc' = 'desc') {
     if (status && !VALID_STATUSES.includes(status)) {
       throw new BadRequestException(`status must be one of: ${VALID_STATUSES.join(', ')}`);
     }
-    return this.prisma.product.findMany({
-      // ARCHIVED products have deletedAt set by design (see VendorProductsService.archive) —
-      // excluding soft-deleted rows unconditionally would make the ARCHIVED
-      // tab permanently empty, so that one status is the deliberate exception.
-      where: { ...(status === 'ARCHIVED' ? {} : { deletedAt: null }), ...(status ? { status: status as any } : {}) },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        images: { take: 1, orderBy: { sortOrder: 'asc' } },
-        vendor: { include: { store: true } },
-      },
-    });
+    const orderField = sortBy && SORTABLE_FIELDS.includes(sortBy) ? sortBy : 'createdAt';
+    // ARCHIVED products have deletedAt set by design (see VendorProductsService.archive) —
+    // excluding soft-deleted rows unconditionally would make the ARCHIVED
+    // tab permanently empty, so that one status is the deliberate exception.
+    const where = {
+      ...(status === 'ARCHIVED' ? {} : { deletedAt: null }),
+      ...(status ? { status: status as any } : {}),
+    };
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        orderBy: { [orderField]: sortDir },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          images: { take: 1, orderBy: { sortOrder: 'asc' } },
+          vendor: { include: { store: true } },
+        },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+    return { products, total, page, pageSize };
   }
 
   async approve(productId: string, actorId: string) {

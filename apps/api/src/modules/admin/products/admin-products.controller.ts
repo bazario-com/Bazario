@@ -13,8 +13,20 @@ export class AdminProductsController {
 
   @RequirePermission('VIEW_PENDING_PRODUCTS')
   @Get()
-  findAll(@Query('status') status?: string) {
-    return this.adminProductsService.findAll(status);
+  findAll(
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortDir') sortDir?: string,
+  ) {
+    return this.adminProductsService.findAll(
+      status,
+      page ? parseInt(page, 10) : 1,
+      pageSize ? parseInt(pageSize, 10) : 20,
+      sortBy,
+      sortDir === 'asc' ? 'asc' : 'desc',
+    );
   }
 
   @RequirePermission('APPROVE_PRODUCTS')
