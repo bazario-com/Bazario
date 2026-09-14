@@ -31,23 +31,49 @@ export class AdminUsersService {
     return { email: user.email, temporaryPassword: tempPassword };
   }
 
-  findAll(role?: string) {
-    return this.prisma.user.findMany({
-      where: role ? { role: role as any } : undefined,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        isActive: true,
-        phone: true,
-        createdAt: true,
-        lastLoginAt: true,
-      },
-      take: 200, // simple cap for this phase — full pagination/search lands with the admin UI's table component
-    });
+  async findAll(
+    role?: string,
+    search?: string,
+    page = 1,
+    pageSize = 20,
+    sortBy?: string,
+    sortDir: 'asc' | 'desc' = 'desc',
+  ) {
+    const SORTABLE_FIELDS = ['createdAt', 'firstName', 'email', 'role'];
+    const orderField = sortBy && SORTABLE_FIELDS.includes(sortBy) ? sortBy : 'createdAt';
+    const where = {
+      ...(role ? { role: role as any } : {}),
+      ...(search
+        ? {
+            OR: [
+              { firstName: { contains: search, mode: 'insensitive' as const } },
+              { lastName: { contains: search, mode: 'insensitive' as const } },
+              { email: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        orderBy: { [orderField]: sortDir },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          isActive: true,
+          phone: true,
+          createdAt: true,
+          lastLoginAt: true,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+    return { users, total, page, pageSize };
   }
 
   async setActive(actingAdminId: string, targetUserId: string, isActive: boolean) {

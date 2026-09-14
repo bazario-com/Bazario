@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { AdminDataTable, type Column } from '@/components/admin/AdminDataTable';
+import { relativeTime } from '@/lib/format-time';
 
 interface AdminUser {
   id: string;
@@ -14,14 +16,54 @@ interface AdminUser {
   createdAt: string;
 }
 
+const ROLES = ['', 'CUSTOMER', 'VENDOR', 'ADMIN', 'SUPER_ADMIN'];
+const PAGE_SIZE = 20;
+
 export default function AdminUsersPage() {
   const { user, authFetch } = useAuth();
-  const [users, setUsers] = useState<AdminUser[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [role, setRole] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [resetResult, setResetResult] = useState<{ email: string; temporaryPassword: string } | null>(null);
   const [resetting, setResetting] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const load = () => authFetch('/admin/users').then((res) => res.json()).then(setUsers);
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    const params = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE) });
+    if (role) params.set('role', role);
+    if (search) params.set('search', search);
+    authFetch(`/admin/users?${params.toString()}`)
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data) => {
+        setUsers(data.users);
+        setTotal(data.total);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [authFetch, role, search, page]);
+
+  useEffect(() => {
+    if (user) load();
+  }, [user, load]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [role, search]);
 
   const exportContacts = async () => {
     const res = await authFetch('/admin/users/export');
@@ -34,35 +76,31 @@ export default function AdminUsersPage() {
     URL.revokeObjectURL(url);
   };
 
-  useEffect(() => {
-    if (user) load();
-  }, [user]);
-
   const resetPassword = async (target: AdminUser) => {
     if (!confirm(`Reset the password for ${target.email}? A new temporary password will be generated.`)) return;
     setResetting(target.id);
-    setError(null);
+    setActionError(null);
     try {
       const res = await authFetch(`/admin/users/${target.id}/reset-password`, { method: 'PATCH' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? 'Could not reset password');
       setResetResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setActionError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setResetting(null);
     }
   };
 
   const toggleActive = async (target: AdminUser) => {
-    setError(null);
+    setActionError(null);
     const res = await authFetch(`/admin/users/${target.id}/active`, {
       method: 'PATCH',
       body: JSON.stringify({ isActive: !target.isActive }),
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.message ?? 'Could not update user');
+      setActionError(data.message ?? 'Could not update user');
       return;
     }
     load();
@@ -70,14 +108,85 @@ export default function AdminUsersPage() {
 
   if (!user) return null;
 
+  const columns: Column<AdminUser>[] = [
+    {
+      key: 'firstName',
+      header: 'Name',
+      sortable: true,
+      render: (u) => (
+        <div>
+          <p className="font-medium">
+            {u.firstName} {u.lastName}{' '}
+            <span className="ml-1 rounded-full bg-ink-50 px-2 py-0.5 text-xs font-semibold text-ink">{u.role}</span>
+          </p>
+          <p className="text-xs text-muted">{u.email}</p>
+          {u.phone && <p className="text-xs text-muted">{u.phone}</p>}
+        </div>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: 'Joined',
+      sortable: true,
+      render: (u) => <span className="whitespace-nowrap text-muted">{relativeTime(u.createdAt)}</span>,
+    },
+    {
+      key: 'actions',
+      header: '',
+      render: (u) => (
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => resetPassword(u)}
+            disabled={resetting === u.id}
+            className="rounded-card border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-base disabled:opacity-50"
+          >
+            {resetting === u.id ? '...' : 'Reset Password'}
+          </button>
+          <button
+            onClick={() => toggleActive(u)}
+            className={`rounded-card px-3 py-1.5 text-sm font-medium ${
+              u.isActive
+                ? 'border border-chili text-chili hover:bg-chili-50'
+                : 'bg-marigold text-ink hover:bg-marigold-600'
+            }`}
+          >
+            {u.isActive ? 'Deactivate' : 'Reactivate'}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <button onClick={exportContacts} className="rounded-card bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-700">Export to Excel</button>
+        <button onClick={exportContacts} className="rounded-card bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-700">
+          Export to Excel
+        </button>
       </div>
 
-      {error && <p className="mb-4 rounded-card bg-chili-50 px-4 py-2 text-sm text-chili-600">{error}</p>}
+      <div className="mb-4 flex flex-wrap gap-2">
+        <input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search name or email..."
+          className="w-56 rounded-card border border-line px-3 py-2 text-sm"
+        />
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          className="rounded-card border border-line px-3 py-2 text-sm"
+        >
+          {ROLES.map((r) => (
+            <option key={r} value={r}>
+              {r || 'All roles'}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {actionError && <p className="mb-4 rounded-card bg-chili-50 px-4 py-2 text-sm text-chili-600">{actionError}</p>}
 
       {resetResult && (
         <div className="mb-4 rounded-card bg-marigold-50 p-4 text-sm">
@@ -85,50 +194,26 @@ export default function AdminUsersPage() {
           <p className="mt-1">
             New temporary password: <code className="rounded bg-white px-2 py-1 font-mono">{resetResult.temporaryPassword}</code>
           </p>
-          <p className="mt-1 text-xs text-muted">Share this securely — it won't be shown again.</p>
-          <button onClick={() => setResetResult(null)} className="mt-2 text-xs font-semibold text-marigold-600">Dismiss</button>
+          <p className="mt-1 text-xs text-muted">Share this securely {'\u2014'} it won't be shown again.</p>
+          <button onClick={() => setResetResult(null)} className="mt-2 text-xs font-semibold text-marigold-600">
+            Dismiss
+          </button>
         </div>
       )}
 
-      {users === null ? (
-        <p className="text-muted">Loading…</p>
-      ) : (
-        <ul className="space-y-2">
-          {users.map((u) => (
-            <li key={u.id} className="flex items-center justify-between rounded-card bg-surface p-4 shadow-card">
-              <div>
-                <p className="font-medium">
-                  {u.firstName} {u.lastName}{' '}
-                  <span className="ml-2 rounded-full bg-ink-50 px-2 py-0.5 text-xs font-semibold text-ink">
-                    {u.role}
-                  </span>
-                </p>
-                <p className="text-sm text-muted">{u.email}</p>
-                {u.phone && <p className="text-xs text-muted">{u.phone}</p>}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => resetPassword(u)}
-                  disabled={resetting === u.id}
-                  className="rounded-card border border-line px-3 py-2 text-sm font-medium text-ink hover:bg-base disabled:opacity-50"
-                >
-                  {resetting === u.id ? 'Resetting…' : 'Reset Password'}
-                </button>
-                <button
-                  onClick={() => toggleActive(u)}
-                  className={`rounded-card px-4 py-2 text-sm font-medium ${
-                    u.isActive
-                      ? 'border border-chili text-chili hover:bg-chili-50'
-                      : 'bg-marigold text-ink hover:bg-marigold-600'
-                  }`}
-                >
-                  {u.isActive ? 'Deactivate' : 'Reactivate'}
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <AdminDataTable
+        columns={columns}
+        rows={users}
+        getRowId={(u) => u.id}
+        loading={loading}
+        error={error}
+        onRetry={load}
+        emptyMessage="No users match this filter."
+        page={page}
+        pageSize={PAGE_SIZE}
+        total={total}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

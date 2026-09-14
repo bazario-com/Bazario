@@ -14,8 +14,22 @@ export class AdminUsersController {
 
   @RequirePermission('VIEW_USERS')
   @Get()
-  findAll(@Query('role') role?: string) {
-    return this.adminUsersService.findAll(role);
+  findAll(
+    @Query('role') role?: string,
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortDir') sortDir?: string,
+  ) {
+    return this.adminUsersService.findAll(
+      role,
+      search,
+      page ? parseInt(page, 10) : 1,
+      pageSize ? parseInt(pageSize, 10) : 20,
+      sortBy,
+      sortDir === 'asc' ? 'asc' : 'desc',
+    );
   }
 
   @RequirePermission('EXPORT_USERS')
