@@ -51,8 +51,16 @@ export class AdminVendorsController {
 
   @RequirePermission('VIEW_VENDOR_CHANGE_REQUESTS')
   @Get('change-requests')
-  listChangeRequests(@Query('status') status?: string) {
-    return this.adminVendorsService.listChangeRequests(status);
+  listChangeRequests(
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.adminVendorsService.listChangeRequests(
+      status,
+      page ? parseInt(page, 10) : 1,
+      pageSize ? parseInt(pageSize, 10) : 20,
+    );
   }
 
   @RequirePermission('EDIT_VENDOR_REGISTRATION_INFO')

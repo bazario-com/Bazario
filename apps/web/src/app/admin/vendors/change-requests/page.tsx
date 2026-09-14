@@ -23,6 +23,9 @@ function Skeleton({ className }: { className: string }) {
 export default function AdminChangeRequestsPage() {
   const { authFetch, loading: authLoading } = useAuth();
   const [requests, setRequests] = useState<ChangeRequest[] | null>(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
   const [error, setError] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ businessName: '', businessRegNumber: '', taxId: '' });
@@ -31,14 +34,17 @@ export default function AdminChangeRequestsPage() {
 
   const load = useCallback(() => {
     setError(false);
-    authFetch('/admin/vendors/change-requests?status=PENDING')
+    authFetch(`/admin/vendors/change-requests?status=PENDING&page=${page}&pageSize=${PAGE_SIZE}`)
       .then((res) => {
         if (!res.ok) throw new Error();
         return res.json();
       })
-      .then(setRequests)
+      .then((data) => {
+        setRequests(data.requests);
+        setTotal(data.total);
+      })
       .catch(() => setError(true));
-  }, [authFetch]);
+  }, [authFetch, page]);
 
   useEffect(() => {
     if (!authLoading) load();
@@ -162,6 +168,28 @@ export default function AdminChangeRequestsPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {requests !== null && total > PAGE_SIZE && (
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+            className="rounded-card border border-line px-3 py-1.5 disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <span className="text-muted">
+            Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))} {'\u00b7'} {total} total
+          </span>
+          <button
+            disabled={page >= Math.ceil(total / PAGE_SIZE)}
+            onClick={() => setPage((p) => p + 1)}
+            className="rounded-card border border-line px-3 py-1.5 disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
       )}
     </div>
   );

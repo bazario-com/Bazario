@@ -76,12 +76,19 @@ export class AdminVendorsService {
     });
   }
 
-  listChangeRequests(status?: string) {
-    return this.prisma.vendorInfoChangeRequest.findMany({
-      where: status ? { status: status as any } : undefined,
-      orderBy: { createdAt: 'desc' },
-      include: { vendor: { select: { businessName: true, businessRegNumber: true, taxId: true } } },
-    });
+  async listChangeRequests(status?: string, page = 1, pageSize = 20) {
+    const where = status ? { status: status as any } : undefined;
+    const [requests, total] = await Promise.all([
+      this.prisma.vendorInfoChangeRequest.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: { vendor: { select: { businessName: true, businessRegNumber: true, taxId: true } } },
+      }),
+      this.prisma.vendorInfoChangeRequest.count({ where }),
+    ]);
+    return { requests, total, page, pageSize };
   }
 
   // Editing here (not a vendor-facing PATCH) is the whole point — vendors
