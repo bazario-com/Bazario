@@ -38,36 +38,38 @@ export function ManagementCenter({ access }: { access: Access }) {
   const [totalCustomers, setTotalCustomers] = useState<number | null>(null);
 
   useEffect(() => {
+    // pageSize=1 keeps these calls cheap — only the `total` count matters here,
+    // not the actual records (which the vendors/products/users pages already show).
     if (has('VIEW_VENDORS')) {
-      authFetch('/admin/vendors?status=PENDING')
-        .then((res) => (res.ok ? res.json() : []))
-        .then((data) => setPendingVendors(data.length))
+      authFetch('/admin/vendors?status=PENDING&pageSize=1')
+        .then((res) => (res.ok ? res.json() : { total: 0 }))
+        .then((data) => setPendingVendors(data.total ?? 0))
         .catch(() => setPendingVendors(0));
-      authFetch('/admin/vendors?status=APPROVED')
-        .then((res) => (res.ok ? res.json() : []))
-        .then((data) => setApprovedVendors(data.length))
+      authFetch('/admin/vendors?status=APPROVED&pageSize=1')
+        .then((res) => (res.ok ? res.json() : { total: 0 }))
+        .then((data) => setApprovedVendors(data.total ?? 0))
         .catch(() => setApprovedVendors(0));
     }
     if (has('VIEW_VENDOR_CHANGE_REQUESTS')) {
-      authFetch('/admin/vendors/change-requests?status=PENDING')
-        .then((res) => (res.ok ? res.json() : []))
-        .then((data) => setPendingChangeRequests(data.length))
+      authFetch('/admin/vendors/change-requests?status=PENDING&pageSize=1')
+        .then((res) => (res.ok ? res.json() : { total: 0 }))
+        .then((data) => setPendingChangeRequests(data.total ?? 0))
         .catch(() => setPendingChangeRequests(0));
     }
     if (has('VIEW_PENDING_PRODUCTS')) {
-      authFetch('/admin/products?status=PENDING_APPROVAL')
-        .then((res) => (res.ok ? res.json() : []))
-        .then((data) => setPendingProducts(data.length))
+      authFetch('/admin/products?status=PENDING_APPROVAL&pageSize=1')
+        .then((res) => (res.ok ? res.json() : { total: 0 }))
+        .then((data) => setPendingProducts(data.total ?? 0))
         .catch(() => setPendingProducts(0));
-      authFetch('/admin/products?status=PUBLISHED')
-        .then((res) => (res.ok ? res.json() : []))
-        .then((data) => setPublishedProducts(data.length))
+      authFetch('/admin/products?status=PUBLISHED&pageSize=1')
+        .then((res) => (res.ok ? res.json() : { total: 0 }))
+        .then((data) => setPublishedProducts(data.total ?? 0))
         .catch(() => setPublishedProducts(0));
     }
     if (has('VIEW_USERS')) {
-      authFetch('/admin/users?role=CUSTOMER')
-        .then((res) => (res.ok ? res.json() : []))
-        .then((data) => setTotalCustomers(data.length))
+      authFetch('/admin/users?role=CUSTOMER&pageSize=1')
+        .then((res) => (res.ok ? res.json() : { total: 0 }))
+        .then((data) => setTotalCustomers(data.total ?? 0))
         .catch(() => setTotalCustomers(0));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
