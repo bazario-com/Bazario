@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { AdminDataTable, type Column } from '@/components/admin/AdminDataTable';
 import { relativeTime } from '@/lib/format-time';
@@ -19,11 +20,13 @@ interface AdminUser {
 const ROLES = ['', 'CUSTOMER', 'VENDOR', 'ADMIN', 'SUPER_ADMIN'];
 const PAGE_SIZE = 20;
 
-export default function AdminUsersPage() {
+function AdminUsersContent() {
   const { user, authFetch } = useAuth();
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get('search') ?? '';
   const [role, setRole] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  const [search, setSearch] = useState(initialSearch);
   const [page, setPage] = useState(1);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
@@ -215,5 +218,13 @@ export default function AdminUsersPage() {
         onPageChange={setPage}
       />
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminUsersContent />
+    </Suspense>
   );
 }

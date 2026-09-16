@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 import { filterNavForAccess } from '@/lib/admin-nav';
 
 interface Access {
@@ -18,12 +19,29 @@ interface ShellUser {
   lastName: string;
 }
 
+interface SearchResult {
+  type: 'vendor' | 'product' | 'user';
+  id: string;
+  label: string;
+  subtitle?: string;
+  href: string;
+}
+
+interface NotificationItem {
+  type: string;
+  count: number;
+  label: string;
+  href: string;
+  icon: string;
+}
+
 const ICON_HOME = '\ud83c\udfe0';
 const ICON_MENU = '\u2630';
 const ICON_CLOSE = '\u2715';
 const ICON_BELL = '\ud83d\udd14';
 const ICON_COLLAPSE = '\u00ab';
 const ICON_EXPAND = '\u00bb';
+const SEARCH_MIN_LENGTH = 2;
 
 export function AdminShell({
   access,
@@ -35,13 +53,51 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { authFetch } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const [notifications, setNotifications] = useState<NotificationItem[] | null>(null);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const sections = filterNavForAccess(access);
   const initial = user.firstName?.[0]?.toUpperCase() ?? '?';
 
   const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname.startsWith(href));
+
+  useEffect(() => {
+    if (searchQuery.trim().length < SEARCH_MIN_LENGTH) {
+      setSearchResults([]);
+      return;
+    }
+    const t = setTimeout(() => {
+      authFetch(`/admin/me/search?q=${encodeURIComponent(searchQuery)}`)
+        .then((res) => (res.ok ? res.json() : { results: [] }))
+        .then((data) => setSearchResults(data.results))
+        .catch(() => setSearchResults([]));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchQuery, authFetch]);
+
+  useEffect(() => {
+    authFetch('/admin/me/notifications')
+      .then((res) => (res.ok ? res.json() : { items: [] }))
+      .then((data) => setNotifications(data.items))
+      .catch(() => setNotifications([]));
+  }, [authFetch]);
+
+  const goToResult = (href: string) => {
+    router.push(href);
+    setSearchOpen(false);
+    setSearchQuery('');
+  };
+
+  const totalNotifCount = (notifications ?? []).reduce((sum, n) => sum + n.count, 0);
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
     <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
@@ -144,23 +200,86 @@ export function AdminShell({
           </button>
           <span className="font-display font-bold text-ink md:hidden">Shopina Management</span>
 
-          <div className="hidden flex-1 items-center md:flex">
+          <div className="relative hidden flex-1 items-center md:flex">
             <input
-              disabled
-              placeholder={`Global search \u2014 coming soon`}
-              className="w-full max-w-sm rounded-card border border-line bg-base px-3 py-1.5 text-sm text-muted"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSearchOpen(true);
+              }}
+              onFocus={() => setSearchOpen(true)}
+              placeholder="Search vendors, products, users..."
+              className="w-full max-w-sm rounded-card border border-line bg-base px-3 py-1.5 text-sm text-ink-900"
             />
+            {searchOpen && searchQuery.trim().length >= SEARCH_MIN_LENGTH && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setSearchOpen(false)} />
+                <div className="absolute left-0 top-full z-40 mt-1 w-full max-w-sm rounded-card border border-line bg-surface shadow-card">
+                  {searchResults.length === 0 ? (
+                    <p className="p-3 text-sm text-muted">No matches.</p>
+                  ) : (
+                    <ul className="max-h-80 overflow-y-auto py-1">
+                      {searchResults.map((r) => (
+                        <li key={`${r.type}-${r.id}`}>
+                          <button
+                            onClick={() => goToResult(r.href)}
+                            className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-base"
+                          >
+                            <span className="font-medium text-ink-900">{r.label}</span>
+                            {r.subtitle && <span className="text-xs text-muted">{r.subtitle}</span>}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="ml-auto flex items-center gap-3">
-            <button
-              disabled
-              aria-label="Notifications (coming soon)"
-              title={`Notifications \u2014 coming soon`}
-              className="rounded-card p-1.5 text-line"
-            >
-              {ICON_BELL}
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setNotifOpen((o) => !o)}
+                aria-label="Notifications"
+                className="relative rounded-card p-1.5 text-ink hover:bg-ink-50"
+              >
+                {ICON_BELL}
+                {totalNotifCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-chili px-1 text-[10px] font-bold text-white">
+                    {totalNotifCount > 9 ? '9+' : totalNotifCount}
+                  </span>
+                )}
+              </button>
+              {notifOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
+                  <div className="absolute right-0 top-full z-40 mt-1 w-72 rounded-card border border-line bg-surface shadow-card">
+                    <p className="border-b border-line px-3 py-2 text-sm font-semibold text-ink-900">Notifications</p>
+                    {notifications === null ? (
+                      <p className="p-3 text-sm text-muted">Loading{'\u2026'}</p>
+                    ) : notifications.length === 0 ? (
+                      <p className="p-3 text-sm text-muted">You're all caught up.</p>
+                    ) : (
+                      <ul>
+                        {notifications.map((n) => (
+                          <li key={n.type}>
+                            <Link
+                              href={n.href}
+                              onClick={() => setNotifOpen(false)}
+                              className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-base"
+                            >
+                              <span aria-hidden>{n.icon}</span>
+                              <span className="text-ink-900">{n.label}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
             <div className="hidden text-right md:block">
               <p className="text-sm font-semibold text-ink-900">
                 {user.firstName} {user.lastName}

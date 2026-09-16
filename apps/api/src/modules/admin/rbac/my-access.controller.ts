@@ -2,6 +2,8 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PermissionsService } from './permissions.service';
 import { AuditLogService } from './audit-log.service';
+import { NotificationsService } from './notifications.service';
+import { AdminSearchService } from './admin-search.service';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentUser, AuthenticatedUser } from '../../../common/decorators/current-user.decorator';
 
@@ -14,6 +16,8 @@ export class MyAccessController {
   constructor(
     private readonly permissionsService: PermissionsService,
     private readonly auditLog: AuditLogService,
+    private readonly notificationsService: NotificationsService,
+    private readonly adminSearchService: AdminSearchService,
   ) {}
 
   @Get('access')
@@ -27,5 +31,19 @@ export class MyAccessController {
   @Get('activity')
   getMyActivity(@CurrentUser() user: AuthenticatedUser, @Query('limit') limit?: string) {
     return this.auditLog.listForActor(user.id, limit ? parseInt(limit, 10) : 10);
+  }
+
+  // Computed live from real pending records, scoped to what this admin can
+  // see — no persisted notification model, no read/unread state.
+  @Get('notifications')
+  getMyNotifications(@CurrentUser() user: AuthenticatedUser) {
+    return this.notificationsService.getNotifications(user.id, user.role);
+  }
+
+  // Global search across vendors/products/users, each scoped to whether
+  // this admin has the corresponding VIEW_* permission.
+  @Get('search')
+  search(@CurrentUser() user: AuthenticatedUser, @Query('q') q?: string) {
+    return this.adminSearchService.search(user.id, user.role, q ?? '');
   }
 }
