@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { permissionLabel } from '@/lib/admin-permissions';
 
 interface AdminRole {
   id: string;
@@ -17,7 +18,13 @@ interface TeamMember {
   isActive: boolean;
   lastLoginAt: string | null;
   createdAt: string;
-  adminRoleAssignment: { role: { name: string } } | null;
+  adminRoleAssignment: {
+    role: {
+      name: string;
+      description: string | null;
+      permissions: { permission: string }[];
+    };
+  } | null;
 }
 
 function Skeleton({ className }: { className: string }) {
@@ -38,6 +45,7 @@ export default function AdminManagementPage() {
   const [createdCreds, setCreatedCreds] = useState<{ email: string; temporaryPassword: string } | null>(null);
 
   const [reassigning, setReassigning] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setError(false);
@@ -250,6 +258,29 @@ export default function AdminManagementPage() {
                   >
                     {member.isActive ? 'Suspend' : 'Reactivate'}
                   </button>
+                </div>
+              )}
+              {(member.role === 'SUPER_ADMIN' || (member.adminRoleAssignment && member.adminRoleAssignment.role.permissions.length > 0)) && (
+                <div className="mt-2 w-full border-t border-line pt-2">
+                  <button
+                    onClick={() => setExpandedId(expandedId === member.id ? null : member.id)}
+                    className="text-xs font-semibold text-marigold-600"
+                  >
+                    {expandedId === member.id ? 'Hide Permissions' : 'View Permissions'}
+                  </button>
+                  {expandedId === member.id && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {member.role === 'SUPER_ADMIN' ? (
+                        <span className="rounded-full bg-ink-50 px-2 py-0.5 text-xs text-ink">Full Access {'\u2014'} all permissions</span>
+                      ) : (
+                        member.adminRoleAssignment!.role.permissions.map((p) => (
+                          <span key={p.permission} className="rounded-full bg-ink-50 px-2 py-0.5 text-xs text-ink">
+                            {permissionLabel(p.permission)}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </li>

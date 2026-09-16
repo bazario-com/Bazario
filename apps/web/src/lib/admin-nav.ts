@@ -41,6 +41,9 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { label: 'Management Team', href: '/admin/management', icon: '\ud83e\uddd1\u200d\ud83d\udcbc', permission: 'MANAGE_ADMIN_USERS' },
       { label: 'Roles & Permissions', href: '/admin/roles', icon: '\ud83d\udd10', permission: 'MANAGE_ROLES_PERMISSIONS' },
       { label: 'Audit Log', href: '/admin/audit-log', icon: '\ud83d\udcdc', permission: 'VIEW_AUDIT_LOGS' },
+      // Every admin can see their own access — not permission-gated, same
+      // principle as the Dashboard link above.
+      { label: 'My Permissions', href: '/admin/my-permissions', icon: '\ud83d\udee1\ufe0f', permission: null },
     ],
   },
 ];

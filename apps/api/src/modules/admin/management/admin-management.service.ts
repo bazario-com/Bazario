@@ -37,7 +37,17 @@ export class AdminManagementService {
         lastLoginAt: true,
         createdAt: true,
         adminRoleAssignment: {
-          include: { role: { select: { name: true } } },
+          include: {
+            role: {
+              select: {
+                name: true,
+                description: true,
+                // Real permission list per role, so the directory can show
+                // exactly what each team member can do — not just a role name.
+                permissions: { select: { permission: true } },
+              },
+            },
+          },
         },
       },
       orderBy: { createdAt: 'asc' },
