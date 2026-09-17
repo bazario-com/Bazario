@@ -9,10 +9,14 @@ import { relativeTime } from '@/lib/format-time';
 interface AdminVendor {
   id: string;
   businessName: string;
+  businessRegNumber: string | null;
+  taxId: string | null;
   status: string;
   createdAt: string;
+  approvedAt: string | null;
+  rejectedReason: string | null;
   commissionRateBps: number;
-  store: { name: string; slug: string } | null;
+  store: { name: string; slug: string; address: string | null; city: string | null; contactPhone: string | null } | null;
   user: { firstName: string; lastName: string; email: string };
 }
 
@@ -244,6 +248,79 @@ export default function AdminVendorsPage() {
         pageSize={PAGE_SIZE}
         total={total}
         onPageChange={setPage}
+        renderDrawer={(v, onClose) => (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center"
+            onClick={onClose}
+          >
+            <div
+              className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-t-card bg-surface p-6 shadow-card sm:rounded-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <h2 className="text-lg font-bold">{v.businessName}</h2>
+                <button onClick={onClose} className="text-muted hover:text-ink-900">
+                  Close
+                </button>
+              </div>
+              <dl className="space-y-3 text-sm">
+                <div>
+                  <dt className="text-muted">Owner</dt>
+                  <dd>
+                    {v.user.firstName} {v.user.lastName} ({v.user.email})
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted">Status</dt>
+                  <dd>{v.status}</dd>
+                </div>
+                {v.businessRegNumber && (
+                  <div>
+                    <dt className="text-muted">Registration Number</dt>
+                    <dd>{v.businessRegNumber}</dd>
+                  </div>
+                )}
+                {v.taxId && (
+                  <div>
+                    <dt className="text-muted">Tax ID</dt>
+                    <dd>{v.taxId}</dd>
+                  </div>
+                )}
+                {v.store && (
+                  <div>
+                    <dt className="text-muted">Store</dt>
+                    <dd>
+                      {v.store.name}
+                      {v.store.address && <>, {v.store.address}</>}
+                      {v.store.city && <>, {v.store.city}</>}
+                      {v.store.contactPhone && <> {'·'} {v.store.contactPhone}</>}
+                    </dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-muted">Commission</dt>
+                  <dd>{(v.commissionRateBps / 100).toFixed(1)}%</dd>
+                </div>
+                {v.approvedAt && (
+                  <div>
+                    <dt className="text-muted">Approved</dt>
+                    <dd>{new Date(v.approvedAt).toLocaleString()}</dd>
+                  </div>
+                )}
+                {v.rejectedReason && (
+                  <div>
+                    <dt className="text-muted">{v.status === 'SUSPENDED' ? 'Suspension Reason' : 'Rejection Reason'}</dt>
+                    <dd>{v.rejectedReason}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-muted">Applied</dt>
+                  <dd>{new Date(v.createdAt).toLocaleString()}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        )}
       />
     </div>
   );
