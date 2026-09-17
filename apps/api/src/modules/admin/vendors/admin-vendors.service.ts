@@ -76,6 +76,44 @@ export class AdminVendorsService {
     });
   }
 
+  async suspend(vendorId: string, reason: string, actorId: string) {
+    const vendor = await this.prisma.vendor.findUnique({ where: { id: vendorId } });
+    if (!vendor) throw new NotFoundException('Vendor not found');
+    if (vendor.status !== 'APPROVED') {
+      throw new BadRequestException('Only approved vendors can be suspended');
+    }
+
+    const updated = await this.prisma.vendor.update({
+      where: { id: vendorId },
+      data: { status: 'SUSPENDED', rejectedReason: reason },
+    });
+    await this.auditLog.log(actorId, 'SUSPEND_VENDOR', {
+      targetType: 'Vendor',
+      targetId: vendorId,
+      details: { businessName: vendor.businessName, reason },
+    });
+    return updated;
+  }
+
+  async reactivate(vendorId: string, actorId: string) {
+    const vendor = await this.prisma.vendor.findUnique({ where: { id: vendorId } });
+    if (!vendor) throw new NotFoundException('Vendor not found');
+    if (vendor.status !== 'SUSPENDED') {
+      throw new BadRequestException('Only suspended vendors can be reactivated');
+    }
+
+    const updated = await this.prisma.vendor.update({
+      where: { id: vendorId },
+      data: { status: 'APPROVED', rejectedReason: null },
+    });
+    await this.auditLog.log(actorId, 'REACTIVATE_VENDOR', {
+      targetType: 'Vendor',
+      targetId: vendorId,
+      details: { businessName: vendor.businessName },
+    });
+    return updated;
+  }
+
   async listChangeRequests(status?: string, page = 1, pageSize = 20) {
     const where = status ? { status: status as any } : undefined;
     const [requests, total] = await Promise.all([

@@ -66,6 +66,19 @@ export default function AdminVendorsPage() {
     load();
   };
 
+  const suspend = async (id: string) => {
+    const reason = prompt('Reason for suspension (shown to the vendor):');
+    if (!reason) return;
+    await authFetch(`/admin/vendors/${id}/suspend`, { method: 'POST', body: JSON.stringify({ reason }) });
+    load();
+  };
+
+  const reactivate = async (id: string) => {
+    if (!confirm('Reactivate this vendor?')) return;
+    await authFetch(`/admin/vendors/${id}/reactivate`, { method: 'POST' });
+    load();
+  };
+
   const saveCommission = async (id: string) => {
     const percentStr = editingCommission[id];
     const percent = parseFloat(percentStr);
@@ -148,23 +161,51 @@ export default function AdminVendorsPage() {
     {
       key: 'actions',
       header: '',
-      render: (v) =>
-        v.status === 'PENDING' ? (
-          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => approve(v.id)}
-              className="rounded-card bg-marigold px-3 py-1.5 text-sm font-semibold text-ink hover:bg-marigold-600"
-            >
-              Approve
-            </button>
-            <button
-              onClick={() => reject(v.id)}
-              className="rounded-card border border-chili px-3 py-1.5 text-sm font-medium text-chili hover:bg-chili-50"
-            >
-              Reject
-            </button>
-          </div>
-        ) : null,
+      render: (v) => {
+        if (v.status === 'PENDING') {
+          return (
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => approve(v.id)}
+                className="rounded-card bg-marigold px-3 py-1.5 text-sm font-semibold text-ink hover:bg-marigold-600"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => reject(v.id)}
+                className="rounded-card border border-chili px-3 py-1.5 text-sm font-medium text-chili hover:bg-chili-50"
+              >
+                Reject
+              </button>
+            </div>
+          );
+        }
+        if (v.status === 'APPROVED') {
+          return (
+            <div onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => suspend(v.id)}
+                className="rounded-card border border-chili px-3 py-1.5 text-sm font-medium text-chili hover:bg-chili-50"
+              >
+                Suspend
+              </button>
+            </div>
+          );
+        }
+        if (v.status === 'SUSPENDED') {
+          return (
+            <div onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => reactivate(v.id)}
+                className="rounded-card bg-marigold px-3 py-1.5 text-sm font-semibold text-ink hover:bg-marigold-600"
+              >
+                Reactivate
+              </button>
+            </div>
+          );
+        }
+        return null;
+      },
     },
   ];
 

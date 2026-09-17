@@ -49,6 +49,23 @@ export class AdminVendorsController {
     return this.adminVendorsService.setCommission(id, dto.commissionRateBps);
   }
 
+  // Reuses REJECT_VENDORS/APPROVE_VENDORS rather than introducing new
+  // permission enum values for this — suspending removes approved status
+  // (same authority as rejecting), reactivating restores it (same authority
+  // as approving). Avoids a schema migration for what is semantically the
+  // same permission level.
+  @RequirePermission('REJECT_VENDORS')
+  @Post(':id/suspend')
+  suspend(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: RejectDto) {
+    return this.adminVendorsService.suspend(id, dto.reason, user.id);
+  }
+
+  @RequirePermission('APPROVE_VENDORS')
+  @Post(':id/reactivate')
+  reactivate(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.adminVendorsService.reactivate(id, user.id);
+  }
+
   @RequirePermission('VIEW_VENDOR_CHANGE_REQUESTS')
   @Get('change-requests')
   listChangeRequests(

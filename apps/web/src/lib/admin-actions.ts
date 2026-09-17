@@ -6,6 +6,8 @@ export interface ActionInfo {
 export const ACTION_LABELS: Record<string, ActionInfo> = {
   APPROVE_VENDOR: { label: 'Approved a vendor', icon: '\u2705' },
   REJECT_VENDOR: { label: 'Rejected a vendor', icon: '\u274c' },
+  SUSPEND_VENDOR: { label: 'Suspended a vendor', icon: '\u23f8\ufe0f' },
+  REACTIVATE_VENDOR: { label: 'Reactivated a vendor', icon: '\ud83d\udfe2' },
   APPROVE_PRODUCT: { label: 'Approved a product', icon: '\u2705' },
   REJECT_PRODUCT: { label: 'Rejected a product', icon: '\u274c' },
   RESET_USER_PASSWORD: { label: 'Reset a user password', icon: '\ud83d\udd11' },
