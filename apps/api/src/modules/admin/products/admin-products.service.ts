@@ -74,4 +74,46 @@ export class AdminProductsService {
     });
     return updated;
   }
+
+  // Mirrors VendorProductsService.archive() exactly (same status/deletedAt
+  // fields), but on the admin side — vendors previously had no way to
+  // un-archive at all, and admins had no way to pull a published product
+  // without waiting on the vendor.
+  async archiveProduct(productId: string, actorId: string) {
+    const product = await this.prisma.product.findUnique({ where: { id: productId } });
+    if (!product) throw new NotFoundException('Product not found');
+    if (product.status !== 'PUBLISHED') {
+      throw new BadRequestException('Only published products can be archived');
+    }
+
+    const updated = await this.prisma.product.update({
+      where: { id: productId },
+      data: { status: 'ARCHIVED', deletedAt: new Date() },
+    });
+    await this.auditLog.log(actorId, 'ARCHIVE_PRODUCT', {
+      targetType: 'Product',
+      targetId: productId,
+      details: { title: product.title },
+    });
+    return updated;
+  }
+
+  async restoreProduct(productId: string, actorId: string) {
+    const product = await this.prisma.product.findUnique({ where: { id: productId } });
+    if (!product) throw new NotFoundException('Product not found');
+    if (product.status !== 'ARCHIVED') {
+      throw new BadRequestException('Only archived products can be restored');
+    }
+
+    const updated = await this.prisma.product.update({
+      where: { id: productId },
+      data: { status: 'PUBLISHED', deletedAt: null },
+    });
+    await this.auditLog.log(actorId, 'RESTORE_PRODUCT', {
+      targetType: 'Product',
+      targetId: productId,
+      details: { title: product.title },
+    });
+    return updated;
+  }
 }

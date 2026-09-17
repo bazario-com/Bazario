@@ -40,4 +40,20 @@ export class AdminProductsController {
   reject(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: RejectDto) {
     return this.adminProductsService.reject(id, dto.reason, user.id);
   }
+
+  // Reuses REJECT_PRODUCTS/APPROVE_PRODUCTS rather than introducing new
+  // permission enum values — same reasoning as vendor suspend/reactivate:
+  // archiving removes published visibility (reject-level authority),
+  // restoring returns it (approve-level authority).
+  @RequirePermission('REJECT_PRODUCTS')
+  @Post(':id/archive')
+  archive(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.adminProductsService.archiveProduct(id, user.id);
+  }
+
+  @RequirePermission('APPROVE_PRODUCTS')
+  @Post(':id/restore')
+  restore(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.adminProductsService.restoreProduct(id, user.id);
+  }
 }

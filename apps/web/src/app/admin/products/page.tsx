@@ -8,8 +8,18 @@ import { AdminDataTable, type Column } from '@/components/admin/AdminDataTable';
 interface AdminProduct {
   id: string;
   title: string;
+  description: string;
+  brand: string | null;
   status: string;
+  rejectedReason: string | null;
   basePriceCents: number;
+  currency: string;
+  discountPct: number;
+  averageRating: string;
+  reviewCount: number;
+  totalSold: number;
+  isFeatured: boolean;
+  publishedAt: string | null;
   vendor: { businessName: string; store: { name: string } | null };
 }
 
@@ -61,6 +71,18 @@ export default function AdminProductsPage() {
     load();
   };
 
+  const archiveProduct = async (id: string) => {
+    if (!confirm('Archive this product? It will be removed from the storefront.')) return;
+    await authFetch(`/admin/products/${id}/archive`, { method: 'POST' });
+    load();
+  };
+
+  const restoreProduct = async (id: string) => {
+    if (!confirm('Restore this product to Published?')) return;
+    await authFetch(`/admin/products/${id}/restore`, { method: 'POST' });
+    load();
+  };
+
   if (!user) return null;
 
   const columns: Column<AdminProduct>[] = [
@@ -84,23 +106,51 @@ export default function AdminProductsPage() {
     {
       key: 'actions',
       header: '',
-      render: (p) =>
-        p.status === 'PENDING_APPROVAL' ? (
-          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => approve(p.id)}
-              className="rounded-card bg-marigold px-3 py-1.5 text-sm font-semibold text-ink hover:bg-marigold-600"
-            >
-              Approve
-            </button>
-            <button
-              onClick={() => reject(p.id)}
-              className="rounded-card border border-chili px-3 py-1.5 text-sm font-medium text-chili hover:bg-chili-50"
-            >
-              Reject
-            </button>
-          </div>
-        ) : null,
+      render: (p) => {
+        if (p.status === 'PENDING_APPROVAL') {
+          return (
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => approve(p.id)}
+                className="rounded-card bg-marigold px-3 py-1.5 text-sm font-semibold text-ink hover:bg-marigold-600"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => reject(p.id)}
+                className="rounded-card border border-chili px-3 py-1.5 text-sm font-medium text-chili hover:bg-chili-50"
+              >
+                Reject
+              </button>
+            </div>
+          );
+        }
+        if (p.status === 'PUBLISHED') {
+          return (
+            <div onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => archiveProduct(p.id)}
+                className="rounded-card border border-chili px-3 py-1.5 text-sm font-medium text-chili hover:bg-chili-50"
+              >
+                Archive
+              </button>
+            </div>
+          );
+        }
+        if (p.status === 'ARCHIVED') {
+          return (
+            <div onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => restoreProduct(p.id)}
+                className="rounded-card bg-marigold px-3 py-1.5 text-sm font-semibold text-ink hover:bg-marigold-600"
+              >
+                Restore
+              </button>
+            </div>
+          );
+        }
+        return null;
+      },
     },
   ];
 
@@ -134,6 +184,75 @@ export default function AdminProductsPage() {
         pageSize={PAGE_SIZE}
         total={total}
         onPageChange={setPage}
+        renderDrawer={(p, onClose) => (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center"
+            onClick={onClose}
+          >
+            <div
+              className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-t-card bg-surface p-6 shadow-card sm:rounded-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <h2 className="text-lg font-bold">{p.title}</h2>
+                <button onClick={onClose} className="text-muted hover:text-ink-900">
+                  Close
+                </button>
+              </div>
+              <dl className="space-y-3 text-sm">
+                <div>
+                  <dt className="text-muted">Store</dt>
+                  <dd>{p.vendor.store?.name ?? p.vendor.businessName}</dd>
+                </div>
+                {p.brand && (
+                  <div>
+                    <dt className="text-muted">Brand</dt>
+                    <dd>{p.brand}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-muted">Description</dt>
+                  <dd>{p.description}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted">Price</dt>
+                  <dd>
+                    {formatPriceCents(p.basePriceCents)}
+                    {p.discountPct > 0 && <> ({p.discountPct}% off)</>}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted">Rating</dt>
+                  <dd>
+                    {Number(p.averageRating).toFixed(1)} {'★'} ({p.reviewCount} review{p.reviewCount !== 1 ? 's' : ''})
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted">Units Sold</dt>
+                  <dd>{p.totalSold}</dd>
+                </div>
+                {p.isFeatured && (
+                  <div>
+                    <dt className="text-muted">Featured</dt>
+                    <dd>Yes</dd>
+                  </div>
+                )}
+                {p.publishedAt && (
+                  <div>
+                    <dt className="text-muted">Published</dt>
+                    <dd>{new Date(p.publishedAt).toLocaleString()}</dd>
+                  </div>
+                )}
+                {p.rejectedReason && (
+                  <div>
+                    <dt className="text-muted">Rejection Reason</dt>
+                    <dd>{p.rejectedReason}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          </div>
+        )}
       />
     </div>
   );

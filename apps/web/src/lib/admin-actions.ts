@@ -10,6 +10,8 @@ export const ACTION_LABELS: Record<string, ActionInfo> = {
   REACTIVATE_VENDOR: { label: 'Reactivated a vendor', icon: '\ud83d\udfe2' },
   APPROVE_PRODUCT: { label: 'Approved a product', icon: '\u2705' },
   REJECT_PRODUCT: { label: 'Rejected a product', icon: '\u274c' },
+  ARCHIVE_PRODUCT: { label: 'Archived a product', icon: '\ud83d\udce6' },
+  RESTORE_PRODUCT: { label: 'Restored a product', icon: '\ud83d\udfe2' },
   RESET_USER_PASSWORD: { label: 'Reset a user password', icon: '\ud83d\udd11' },
   REACTIVATE_USER: { label: 'Reactivated a user', icon: '\ud83d\udfe2' },
   DEACTIVATE_USER: { label: 'Deactivated a user', icon: '\ud83d\udd34' },
